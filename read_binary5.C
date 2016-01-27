@@ -15,10 +15,11 @@
                    - start ROOT
                    root [0] .L read_binary.C+
                    root [1] decode("test.dat");
+		   - The Histogram disappears once the file is save. Type in the following to make the histogram again.
+		   root [2] TFile MyFile("test.root")
+		   root [3] h1->Draw()
  
 */
-
-//Test comment
  
 #include "TMath.h"
 #include "TH1.h"
@@ -66,7 +67,7 @@ void decode(char *filename) {
    float bin_width[4][1024];
    char rootfile[256];
    int i, j, ch, n, chn_index;
-   double t1, t2, dt, BL;
+   double t1, t2, dt, BL, ChargeCountVBW;
 
    // open the binary waveform file
    FILE *f = fopen(Form("%s", filename), "r");
@@ -95,21 +96,15 @@ void decode(char *filename) {
    
    // create canvas
 	TCanvas *c1 = new TCanvas();
-	TCanvas *c2 = new TCanvas();
-
-   // Divide Canvas
-
-	c1->Divide(3,1);
-   
+	c1->Divide(2,1);
+	  
    // create graph
    TGraph *g = new TGraph(1024, (double *)time[0], (double *)waveform[0]);
 
 	// create histograms
 
-	TH1F *h1 = new TH1F("h1","Integral",500,-0.5,0.5);
-	TH1F *h2 = new TH1F("h2","Integral V.B.W",500,-0.5,0.5);
-	TH1F *h3 = new TH1F("h3","Integral Trapezoidal",500,-0.5,0.5);
-
+	TH1F *h1 = new TH1F("h1","Charge Count",1000,-12000,12000);
+	
    // read time header
    fread(&th, sizeof(th), 1, f);
    printf("Found data for board #%d\n", th.board_serial_number);
@@ -177,75 +172,50 @@ void decode(char *filename) {
          g->SetPoint(i, time[0][i], waveform[0][i]);
       
       // draw graph individual graph
-	c2->cd(1);
+	c1->cd(1);
 	g->Draw("ACP");
+	g->SetTitle("; Time [nsec]; Voltage [mV]");
 
+		
      //  Create Fit Functions and Fit g
-     //	TF1 *f1 = new TF1("f1","[0]+[1]*TMath::Landau(x,[2],[3])",-1000,1000);
-	TF1 *f2 = new TF1("f2","pol0",0,1024);
-	g->Fit("f2","R");
-     // g->Fit("f1");
+     	TF1 *f1 = new TF1("f1","pol0",0,1024);
+	g->Fit("f1","R");
 	
 	// Obtain Baseline
-	BL = f2->GetParameter(0);
+	BL = f1->GetParameter(0);
 
 	//Define Integral Parameters 
-	double gIntegral=0.0;
-	double gIntegralVBW2=0.0;
-	double gIntegraltrap=0.0;
+	double gIntegralVBW=0.0;
+
 	for(int i = 1 ; i < 1023 ; i++)
 	{
-	  gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
-	  gIntegral=gIntegral+(waveform[0][i]-BL);
-	  gIntegraltrap=gIntegraltrap+(waveform[0][i]-BL)+(waveform[0][i+1]-waveform[0][i])/2.0;
-	  
-	 
+	  gIntegralVBW=gIntegralVBW+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
+		   
 	}
-	// Display Integral Results
-	cout<<"gIntegralVBW2: "<<gIntegralVBW2 <<endl;
-	cout<<"gIntegral: "<<gIntegral <<endl;
-	cout<<"gIntegraltrap: "<<gIntegraltrap <<endl;
-	c2->Update();
-	
+	// Display Integral Results in mV*ns and # of electrons
+	double electron=1.60217662e-07;
+	ChargeCountVBW = (gIntegralVBW/50)/electron;
+	cout<<"gIntegralVBW: "<<gIntegralVBW <<endl;
+	cout<<"ChargeCountVBW: "<<ChargeCountVBW <<endl;
 	
 	// Fill Histograms
 
-	h1->Fill(gIntegral);
-	h2->Fill(gIntegralVBW2);
-	h3->Fill(gIntegraltrap);
-   }
+	h1->Fill(ChargeCountVBW);
+	
 	// Display Histgrams
-	c1->cd(1);
-	h1->SetLineColor(kRed);
-	h1->Draw();
 	c1->cd(2);
-	h2->SetLineColor(kBlue);
-	h2->Draw();
-	c1->cd(3);
-	h1->SetLineColor(kGreen);
-	h3->Draw();
-	c1->Modified();
+	h1->SetLineColor(kMagenta);
+	h1->SetTitle("Electron Count;Charge [e]; Count");
+	h1->Draw();
 	c1->Update();
-	
-	// Display all Waveforms 
-	/*c1->cd(4);
-	rec->Draw("w1:t1");
-	TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph");
-	c1->Update();
-	c1->Modified();*/
-
-	
-	
-	
-	
+	}
+		
    // print number of events
    printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
    // save and close root file
    //Save histograms 
    h1->Write();
-   h2->Write();
-   h3->Write();
    rec->Write();
    outfile->Close();
 }
