@@ -17,6 +17,8 @@
                    root [1] decode("test.dat");
  
 */
+
+//Test comment
  
 #include "TMath.h"
 #include "TH1.h"
