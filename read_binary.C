@@ -79,7 +79,7 @@ void decode(char *filename) {
   // open the binary waveform file
   FILE *f = fopen(Form("%s", filename), "r");
   if (f == NULL) {
-     printf("Cannot find file \'%s\'\n", filename)
+     printf("Cannot find file \'%s\'\n", filename);
   return;
   }
 
