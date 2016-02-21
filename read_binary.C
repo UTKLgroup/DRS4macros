@@ -103,21 +103,15 @@ void decode(char *filename) {
    
   // create canvas
   TCanvas *c1 = new TCanvas();
-  TCanvas *c2 = new TCanvas();
-
-  // Divide Canvas
-
-  c1->Divide(3,1);
    
   // create graph
   TGraph *g = new TGraph(1024, (double *)time[0], (double *)waveform[0]);
 
   // create histograms
 
-  TH1F *h1 = new TH1F("h1","Integral",500,-0.5,0.5);
-  TH1F *h2 = new TH1F("h2","Integral V.B.W",500,-0.5,0.5);
-  TH1F *h3 = new TH1F("h3","Integral Trapezoidal",500,-0.5,0.5);
+  TH1F *h1 = new TH1F("h1","Integral V.B.W",1000,-50,200);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,200,100,-0.005,0.025);
+  TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
 
 
   // read time header
@@ -182,75 +176,34 @@ void decode(char *filename) {
     // fill root tree
     rec->Fill();
       
-    // fill graph
+    // fill graph and Create Histogams
     for (i=0 ; i<1024 ; i++) {
       g->SetPoint(i, time[0][i], waveform[0][i]);
       hAllWaveforms->Fill(time[0][i],waveform[0][i]);
+	WVH->Fill(waveform[0][i]);
     }
-      
-    // draw graph individual graph
-    c2->cd(1);
-    g->Draw("ACP");
-
-    //  Create Fit Functions and Fit g
-    //	TF1 *f1 = new TF1("f1","[0]+[1]*TMath::Landau(x,[2],[3])",-1000,1000);
-    TF1 *f2 = new TF1("f2","pol0",0,1024);
-    g->Fit("f2","R");
-    // g->Fit("f1");
-	
-    // Obtain Baseline
-    BL = f2->GetParameter(0);
-
+   // Obtain baseline from WVH	
+   BL = WVH->GetMean(); 
+   WVH->Reset();
     //Define Integral Parameters 
-    double gIntegral=0.0;
     double gIntegralVBW2=0.0;
-    double gIntegraltrap=0.0;
     for(int i = 1 ; i < 1023 ; i++) {
       gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
-      gIntegral=gIntegral+(waveform[0][i]-BL);
-      gIntegraltrap=gIntegraltrap+(waveform[0][i]-BL)+(waveform[0][i+1]-waveform[0][i])/2.0;
+      
     }
-    // Display Integral Results
-    cout<<"gIntegralVBW2: "<<gIntegralVBW2 <<endl;
-    cout<<"gIntegral: "<<gIntegral <<endl;
-    cout<<"gIntegraltrap: "<<gIntegraltrap <<endl;
-    c2->Update();
 	
-	
+  double ConversionScale=1e5
+  double ChargeCount = gIntegralVBW2*ConversionScale;
+  cout<<"ChargeCount: "<<ChargeCount <<endl;
     // Fill Histograms
-
-    h1->Fill(gIntegral);
-    h2->Fill(gIntegralVBW2);
-    h3->Fill(gIntegraltrap);
+    h1->Fill(ChargeCount);
   }
-  // Display Histgrams
-  c1->cd(1);
-  h1->SetLineColor(kRed);
-  h1->Draw();
-  c1->cd(2);
-  h2->SetLineColor(kBlue);
-  h2->Draw();
-  c1->cd(3);
-  h1->SetLineColor(kGreen);
-  h3->Draw();
-  c1->Modified();
-  c1->Update();
-	
-  // Display all Waveforms 
-  /*c1->cd(4);
-  rec->Draw("w1:t1");
-  TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph");
-  c1->Update();
-  c1->Modified();*/
-	
   // print number of events
   printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
   // save and close root file
   //Save histograms 
   h1->Write();
-  h2->Write();
-  h3->Write();
   hAllWaveforms->Write();
   rec->Write();
   outfile->Close();
