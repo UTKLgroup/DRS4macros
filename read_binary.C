@@ -192,8 +192,7 @@ void decode(char *filename) {
       
     }
 	
-  double ConversionScale=1e5;
-  double ChargeCount = gIntegralVBW2*ConversionScale;
+  double ChargeCount = gIntegralVBW;
   cout<<"ChargeCount: "<<ChargeCount <<endl;
     // Fill Histograms
     h1->Fill(ChargeCount);
