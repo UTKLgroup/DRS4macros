@@ -112,7 +112,8 @@ void decode(char *filename) {
   TH1F *h1 = new TH1F("h1","Integral V.B.W",1000,-50,200);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,200,100,-0.005,0.025);
   TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
-
+  TH1F *Tail = new TH1F("Tail","Area of the Tail",1000,-1,1);
+  TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",1000,-1,1);
 
   // read time header
   fread(&th, sizeof(th), 1, f);
@@ -187,16 +188,28 @@ void decode(char *filename) {
    WVH->Reset();
     //Define Integral Parameters 
     double gIntegralVBW2=0.0;
+    double tailintegral=0.0;
     for(int i = 1 ; i < 1023 ; i++) {
       gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
-      
-    }
+             }
+    for(int i=20 ; i < 800 ; i++) {
+      tailintegral=tailintegral+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2+(time[0][i+1]-time[0][i])/2.0);
+	}
 	
-  double ChargeCount = gIntegralVBW;
-  cout<<"ChargeCount: "<<ChargeCount <<endl;
+  double ChargeCount = gIntegralVBW2;
+  double TailCharge = tailintegral;
+  double ChargeRatio = tailintegral/gIntegralVBW2; 
+ cout<<"ChargeCount: "<<ChargeCount <<endl;
+ cout<<"TailCharge: "<<TailCharge <<endl;
+ cout<<"ChargeRatio: "<<ChargeRatio <<endl;
+
     // Fill Histograms
     h1->Fill(ChargeCount);
+    TT->Fill(ChargeRatio);
+    Tail->Fill(TailCharge);
+
   }
+
   // print number of events
   printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
