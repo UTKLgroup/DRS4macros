@@ -194,11 +194,11 @@ void decode(char *filename) {
   //Fill another histogram to Find peak value of each event 
   for (i=0; i<1024 ; i++){
     ghistogram->Fill(time[0][i],waveform[0][i]);
-   }
+  }
   //Find Peak Value and corresponding index 
   int  Maxx;
   double temp;
-  for(i=0; i< 500 ; i++){
+  for(i=0; i< 400 ; i++){
 	if(temp<waveform[0][i]){
 	Maxx = i;
 	temp=waveform[0][i];
@@ -208,19 +208,28 @@ void decode(char *filename) {
   cout<<"temp: "<<temp <<endl;
   cout<<"Max x-value: "<<Maxx <<endl;
   //Draw individual histograms 
-  ghistogram->Draw();
+  ghistogram->Draw("ACP");
   ghistogram->GetXaxis()->SetTitle("Time [ns]");
   ghistogram->GetYaxis()->SetTitle("Voltage [V]");
   ghistogram->GetXaxis()->CenterTitle();
   ghistogram->GetYaxis()->CenterTitle();
-  ghistogram->Draw("*");
+  //Fitting a gaussian t individual waveforms
+  TF1 *g1 = new TF1("g1","gaus",time[0][Maxx],130);
+  TF1 *g2 = new TF1("g2","gaus",20,time[0][Maxx]);
+  g1->SetParameter(1,Maxx*(200/1024));
+  g2->SetParameter(1,Maxx*(200/1024));
+  g1->SetParameter(2,(200-time[0][Maxx])/2);
+  g2->SetParameter(2,(time[0][Maxx]-20)/2);
+  ghistogram->Fit("g1","R+");
+  ghistogram->Fit("g2","R+");
+  //Plot ghistogram
+  ghistogram->Draw("SAME");
   c1->Update();
   gPad->WaitPrimitive();
-  
   //Define index value where the tail starts
-  double TailStarts = Maxx; 
+  double TailStarts = Maxx+(1024*(g1->GetParameter(2))/200); 
   //Print Tail Start point
-  cout<<"TailStarts: "<<TailStarts <<endl;
+  cout<<"TailStarts: "<<200*TailStarts/1024 <<endl;
   WVH->Reset();
   ghistogram->Reset();
   //Define Integral Parameters 
@@ -230,7 +239,7 @@ void decode(char *filename) {
       gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
              }
   //Tail integral 
-    for(int i=Maxx ; i < 900 ; i++) {
+    for(int i=TailStarts ; i < 900 ; i++) {
       tailintegral=tailintegral+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2+(time[0][i+1]-time[0][i])/2.0);
 	}
 	
