@@ -209,8 +209,14 @@ void decode(char *filename) {
   cout<<"Max x-value: "<<Maxx <<endl;
   //Draw individual histograms 
   ghistogram->Draw();
+  ghistogram->GetXaxis()->SetTitle("Time [ns]");
+  ghistogram->GetYaxis()->SetTitle("Voltage [V]");
+  ghistogram->GetXaxis()->CenterTitle();
+  ghistogram->GetYaxis()->CenterTitle();
+  ghistogram->Draw("*");
   c1->Update();
   gPad->WaitPrimitive();
+  
   //Define index value where the tail starts
   double TailStarts = Maxx; 
   //Print Tail Start point
