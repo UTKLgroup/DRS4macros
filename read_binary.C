@@ -111,6 +111,7 @@ void decode(char *filename) {
 
   TH1F *h1 = new TH1F("h1","Integral V.B.W",1000,-50,200);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,200,100,-0.005,0.025);
+  TH2D *ghistogram = new TH2D("ghistogram","ghistogram",1024,0,200,100,-0.005,0.025);
   TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
   TH1F *Tail = new TH1F("Tail","Area of the Tail",1000,-1,1);
   TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",1000,-1,1);
@@ -134,7 +135,7 @@ void decode(char *filename) {
   }
 
   // loop over all events in data file
-  for (n=0 ; n<10000 ; n++) {
+  for (n=0 ; n<10 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -181,32 +182,63 @@ void decode(char *filename) {
     for (i=0 ; i<1024 ; i++) {
       g->SetPoint(i, time[0][i], waveform[0][i]);
       hAllWaveforms->Fill(time[0][i],waveform[0][i]);
-	WVH->Fill(waveform[0][i]);
-    }
-   // Obtain baseline from WVH	
-   BL = WVH->GetMean(); 
-   WVH->Reset();
-    //Define Integral Parameters 
-    double gIntegralVBW2=0.0;
-    double tailintegral=0.0;
-    for(int i = 1 ; i < 1023 ; i++) {
-      gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
+      WVH->Fill(waveform[0][i]);
+       
+ }
+  // Get Baseline   
+  BL = WVH->GetMean();
+  //Get Baseline from Fit
+  TF1 *f1 = new TF1("f1","pol0",0,20);
+  g->Fit("f1","R");
+  double BL1 = f1->GetParameter(0);
+  //Fill another histogram to Find peak value of each event 
+  for (i=0; i<1024 ; i++){
+    ghistogram->Fill(time[0][i],waveform[0][i]);
+   }
+  //Find Peak Value and corresponding index 
+  int  Maxx;
+  double temp;
+  for(i=0; i< 500 ; i++){
+	if(temp<waveform[0][i]){
+	Maxx = i;
+	temp=waveform[0][i];
+}
+}
+  //Print Max value and corresponding index
+  cout<<"temp: "<<temp <<endl;
+  cout<<"Max x-value: "<<Maxx <<endl;
+  //Draw individual histograms 
+  ghistogram->Draw();
+  c1->Update();
+  gPad->WaitPrimitive();
+  //Define index value where the tail starts
+  double TailStarts = Maxx; 
+  //Print Tail Start point
+  cout<<"TailStarts: "<<TailStarts <<endl;
+  WVH->Reset();
+  ghistogram->Reset();
+  //Define Integral Parameters 
+  double gIntegralVBW2=0.0;
+  double tailintegral=0.0;
+    for(int i = 1 ; i < 900 ; i++) {
+      gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
              }
-    for(int i=20 ; i < 800 ; i++) {
-      tailintegral=tailintegral+(waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2+(time[0][i+1]-time[0][i])/2.0);
+  //Tail integral 
+    for(int i=Maxx ; i < 900 ; i++) {
+      tailintegral=tailintegral+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2+(time[0][i+1]-time[0][i])/2.0);
 	}
 	
   double ChargeCount = gIntegralVBW2;
   double TailCharge = tailintegral;
   double ChargeRatio = tailintegral/gIntegralVBW2; 
- cout<<"ChargeCount: "<<ChargeCount <<endl;
- cout<<"TailCharge: "<<TailCharge <<endl;
- cout<<"ChargeRatio: "<<ChargeRatio <<endl;
+  cout<<"ChargeCount: "<<ChargeCount <<endl;
+  cout<<"TailCharge: "<<TailCharge <<endl;
+  cout<<"ChargeRatio: "<<ChargeRatio <<endl;
 
-    // Fill Histograms
-    h1->Fill(ChargeCount);
-    TT->Fill(ChargeRatio);
-    Tail->Fill(TailCharge);
+  // Fill Histogram
+  h1->Fill(ChargeCount);
+  TT->Fill(ChargeRatio);
+  Tail->Fill(TailCharge);
 
   }
 
@@ -216,6 +248,8 @@ void decode(char *filename) {
   // save and close root file
   //Save histograms 
   h1->Write();
+  TT->Write();
+  Tail->Write();
   hAllWaveforms->Write();
   rec->Write();
   outfile->Close();
