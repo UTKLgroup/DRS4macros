@@ -214,12 +214,10 @@ void decode(char *filename) {
   ghistogram->GetXaxis()->CenterTitle();
   ghistogram->GetYaxis()->CenterTitle();
   //Fitting a gaussian t individual waveforms
-  TF1 *g1 = new TF1("g1","gaus",time[0][Maxx],130);
-  TF1 *g2 = new TF1("g2","gaus",20,time[0][Maxx]);
-  g1->SetParameter(1,Maxx*(200/1024));
+  TF1 *g1 = new TF1("g1","expo",time[0][Maxx],130);
+  TF1 *g2 = new TF1("g2","gaus",15,time[0][Maxx]);
   g2->SetParameter(1,Maxx*(200/1024));
-  g1->SetParameter(2,(200-time[0][Maxx])/2);
-  g2->SetParameter(2,(time[0][Maxx]-20)/2);
+  g2->SetParameter(2,(time[0][Maxx]-15)/2);
   ghistogram->Fit("g1","R+");
   ghistogram->Fit("g2","R+");
   //Plot ghistogram
