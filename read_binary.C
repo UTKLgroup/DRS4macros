@@ -111,10 +111,10 @@ void decode(char *filename) {
 
   TH1F *h1 = new TH1F("h1","Integral V.B.W",1000,-50,200);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,200,100,-0.005,0.025);
-  TH2D *ghistogram = new TH2D("ghistogram","ghistogram",1024,0,200,100,-0.005,0.025);
+  TH2D *ghistogram = new TH2D("ghistogram","ghistogram",1024,0,200,100,-0.05,0.025);
   TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
   TH1F *Tail = new TH1F("Tail","Area of the Tail",1000,-1,1);
-  TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",1000,-1,1);
+  TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",100,0.4,1.4);
 
   // read time header
   fread(&th, sizeof(th), 1, f);
@@ -135,7 +135,7 @@ void decode(char *filename) {
   }
 
   // loop over all events in data file
-  for (n=0 ; n<10 ; n++) {
+  for (n=0 ; n<5000 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -197,9 +197,9 @@ void decode(char *filename) {
   }
   //Find Peak Value and corresponding index 
   int  Maxx;
-  double temp;
-  for(i=0; i< 400 ; i++){
-	if(temp<waveform[0][i]){
+  double temp=0.0;
+  for(i=0; i< 900 ; i++){
+	if(temp>waveform[0][i]){
 	Maxx = i;
 	temp=waveform[0][i];
 }
@@ -208,24 +208,24 @@ void decode(char *filename) {
   cout<<"temp: "<<temp <<endl;
   cout<<"Max x-value: "<<Maxx <<endl;
   //Draw individual histograms 
-  ghistogram->Draw("ACP");
+  //ghistogram->Draw("ACP");
   ghistogram->GetXaxis()->SetTitle("Time [ns]");
   ghistogram->GetYaxis()->SetTitle("Voltage [V]");
   ghistogram->GetXaxis()->CenterTitle();
   ghistogram->GetYaxis()->CenterTitle();
   //Fitting a gaussian t individual waveforms
-  TF1 *g1 = new TF1("g1","expo",time[0][Maxx],130);
+ /* TF1 *g1 = new TF1("g1","expo",time[0][Maxx],130);
   TF1 *g2 = new TF1("g2","gaus",15,time[0][Maxx]);
   g2->SetParameter(1,Maxx*(200/1024));
   g2->SetParameter(2,(time[0][Maxx]-15)/2);
   ghistogram->Fit("g1","R+");
-  ghistogram->Fit("g2","R+");
+  ghistogram->Fit("g2","R+");*/
   //Plot ghistogram
-  ghistogram->Draw("SAME");
-  c1->Update();
-  gPad->WaitPrimitive();
+  //ghistogram->Draw("SAME");
+//  c1->Update();
+//  gPad->WaitPrimitive();
   //Define index value where the tail starts
-  double TailStarts = Maxx+(1024*(g1->GetParameter(2))/200); 
+  double TailStarts = Maxx;
   //Print Tail Start point
   cout<<"TailStarts: "<<200*TailStarts/1024 <<endl;
   WVH->Reset();
@@ -252,9 +252,9 @@ void decode(char *filename) {
   h1->Fill(ChargeCount);
   TT->Fill(ChargeRatio);
   Tail->Fill(TailCharge);
-
+  TT->Draw("*H");
+  c1->Update();
   }
-
   // print number of events
   printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
