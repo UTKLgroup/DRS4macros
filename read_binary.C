@@ -115,7 +115,7 @@ void decode(char *filename) {
   TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
   TH1F *Tail = new TH1F("Tail","Area of the Tail",1000,-1,1);
   TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",100,0.4,1.4);
-
+  TH2F *MH = new TH2F("MH","Tail vs Total",2000,-2,2,2000,-2,2);
   // read time header
   fread(&th, sizeof(th), 1, f);
   printf("Found data for board #%d\n", th.board_serial_number);
@@ -252,9 +252,8 @@ void decode(char *filename) {
   h1->Fill(ChargeCount);
   TT->Fill(ChargeRatio);
   Tail->Fill(TailCharge);
-  TT->Draw("*H");
-  c1->Update();
-  }
+  MH->Fill(ChargeCount,TailCharge);
+   }
   // print number of events
   printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
@@ -263,6 +262,7 @@ void decode(char *filename) {
   h1->Write();
   TT->Write();
   Tail->Write();
+  MH->Write();
   hAllWaveforms->Write();
   rec->Write();
   outfile->Close();
