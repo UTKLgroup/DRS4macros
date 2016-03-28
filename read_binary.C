@@ -39,7 +39,7 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "Getline.h"
-
+#include <stdlib.h>
 typedef struct {
   char           time_header[4];
   char           bn[2];
@@ -115,7 +115,9 @@ void decode(char *filename) {
   TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
   TH1F *Tail = new TH1F("Tail","Area of the Tail",1000,-1,1);
   TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",100,0.4,1.4);
-  TH2F *MH = new TH2F("MH","Tail vs Total",2000,-2,2,2000,-2,2);
+  TH2F *MH = new TH2F("MH","Tail vs Total",2000,-10,2,2000,-8,2);
+  TH2F *WVA = new TH2F("WVA","Width vs Total Area",500,-15,0,100,0,80);
+  TH1F *FWHMTA = new TH1F("FWHMTA","Full Width Half Mass/Total Area",200,-100,100);
   // read time header
   fread(&th, sizeof(th), 1, f);
   printf("Found data for board #%d\n", th.board_serial_number);
@@ -135,7 +137,7 @@ void decode(char *filename) {
   }
 
   // loop over all events in data file
-  for (n=0 ; n<5000 ; n++) {
+  for (n=0 ; n<40000 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -204,30 +206,37 @@ void decode(char *filename) {
 	temp=waveform[0][i];
 }
 }
+  //Find the Base value  and it corresponding index value
+  double delta;
+  double old_delta = abs(temp/2 - waveform[0][0]);
+  int index;
+  for(i=Maxx ; i<1024 ; i++){
+	delta =abs(temp/2 - waveform[0][i]);
+	if(delta<old_delta){
+	old_delta=delta;
+	index = i;
+}
+}
+  //Find the Base value on the other side of Maxx
+  double delta1;
+  double old_delta1 = abs(temp/2 - waveform[0][0]);
+  int index1;
+  for(i=0 ; i<Maxx ; i++){
+        delta1 =abs(temp/2 - waveform[0][i]);
+        if(delta1<old_delta1){
+        old_delta1=delta1;
+        index1 = i;
+}
+}
+
   //Print Max value and corresponding index
+  cout<<"index1: "<<index1 <<endl;
+  cout<<"index: "<<index <<endl;
   cout<<"temp: "<<temp <<endl;
   cout<<"Max x-value: "<<Maxx <<endl;
-  //Draw individual histograms 
-  //ghistogram->Draw("ACP");
-  ghistogram->GetXaxis()->SetTitle("Time [ns]");
-  ghistogram->GetYaxis()->SetTitle("Voltage [V]");
-  ghistogram->GetXaxis()->CenterTitle();
-  ghistogram->GetYaxis()->CenterTitle();
-  //Fitting a gaussian t individual waveforms
- /* TF1 *g1 = new TF1("g1","expo",time[0][Maxx],130);
-  TF1 *g2 = new TF1("g2","gaus",15,time[0][Maxx]);
-  g2->SetParameter(1,Maxx*(200/1024));
-  g2->SetParameter(2,(time[0][Maxx]-15)/2);
-  ghistogram->Fit("g1","R+");
-  ghistogram->Fit("g2","R+");*/
-  //Plot ghistogram
-  //ghistogram->Draw("SAME");
-//  c1->Update();
-//  gPad->WaitPrimitive();
   //Define index value where the tail starts
-  double TailStarts = Maxx;
+  double TailStarts = index;
   //Print Tail Start point
-  cout<<"TailStarts: "<<200*TailStarts/1024 <<endl;
   WVH->Reset();
   ghistogram->Reset();
   //Define Integral Parameters 
@@ -243,7 +252,10 @@ void decode(char *filename) {
 	
   double ChargeCount = gIntegralVBW2;
   double TailCharge = tailintegral;
-  double ChargeRatio = tailintegral/gIntegralVBW2; 
+  double ChargeRatio = (TailCharge/ChargeCount); 
+  double PulseWidth = index-index1;
+  double FWHMoverTA = PulseWidth/ChargeCount; 
+  cout<<"PulseWidth: "<<PulseWidth <<endl;
   cout<<"ChargeCount: "<<ChargeCount <<endl;
   cout<<"TailCharge: "<<TailCharge <<endl;
   cout<<"ChargeRatio: "<<ChargeRatio <<endl;
@@ -252,8 +264,10 @@ void decode(char *filename) {
   h1->Fill(ChargeCount);
   TT->Fill(ChargeRatio);
   Tail->Fill(TailCharge);
+  WVA->Fill(ChargeCount,PulseWidth);
   MH->Fill(ChargeCount,TailCharge);
-   }
+  FWHMTA->Fill(FWHMoverTA); 
+  }
   // print number of events
   printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
@@ -264,6 +278,9 @@ void decode(char *filename) {
   Tail->Write();
   MH->Write();
   hAllWaveforms->Write();
+  WVA->Write();
+  FWHMTA->Write();
   rec->Write();
   outfile->Close();
+  
 }
