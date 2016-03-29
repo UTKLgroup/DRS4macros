@@ -110,14 +110,16 @@ void decode(char *filename) {
   // create histograms
 
   TH1F *h1 = new TH1F("h1","Integral V.B.W",1000,-50,200);
-  TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,200,100,-0.005,0.025);
+  TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,1463,100,-0.1,0.05);
   TH2D *ghistogram = new TH2D("ghistogram","ghistogram",1024,0,200,100,-0.05,0.025);
   TH1F *WVH = new TH1F("WVH","Maximum Waveform Height", 10000,-0.02,0.02);
   TH1F *Tail = new TH1F("Tail","Area of the Tail",1000,-1,1);
-  TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",100,0.4,1.4);
-  TH2F *MH = new TH2F("MH","Tail vs Total",2000,-10,2,2000,-8,2);
-  TH2F *WVA = new TH2F("WVA","Width vs Total Area",500,-15,0,100,0,80);
-  TH1F *FWHMTA = new TH1F("FWHMTA","Full Width Half Mass/Total Area",200,-100,100);
+  TH1F *TT = new TH1F("Tail/Total","Ratio of Tail over total area",1000,-1,3);
+  TH2F *MH = new TH2F("MH","Tail vs Total",1000,-20,4,1000,-20,5);
+  TH2F *WVA = new TH2F("WVA","Width vs Total Area",1000,-30,4,1000,0,150);
+  TH1F *FWHMTA = new TH1F("FWHMTA","Full Width Half Mass/Total Area",400,-100,100);
+  TH1F *HR = new TH1F("HR","Height ratio",180,-0.3,0.3);
+  TH2F *PHvPA = new TH2F("PHvPA","Pulse height vs Pulse Area",1000,-20,0,1000,-0.3,0);
   // read time header
   fread(&th, sizeof(th), 1, f);
   printf("Found data for board #%d\n", th.board_serial_number);
@@ -137,7 +139,8 @@ void decode(char *filename) {
   }
 
   // loop over all events in data file
-  for (n=0 ; n<40000 ; n++) {
+
+  for (n=0 ; n<150000 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -252,9 +255,11 @@ void decode(char *filename) {
 	
   double ChargeCount = gIntegralVBW2;
   double TailCharge = tailintegral;
-  double ChargeRatio = (TailCharge/ChargeCount); 
+  double ChargeRatio =0.0;
+  ChargeRatio= (TailCharge/ChargeCount); 
   double PulseWidth = index-index1;
   double FWHMoverTA = PulseWidth/ChargeCount; 
+  double HoverTA = temp/ChargeCount;
   cout<<"PulseWidth: "<<PulseWidth <<endl;
   cout<<"ChargeCount: "<<ChargeCount <<endl;
   cout<<"TailCharge: "<<TailCharge <<endl;
@@ -267,7 +272,9 @@ void decode(char *filename) {
   WVA->Fill(ChargeCount,PulseWidth);
   MH->Fill(ChargeCount,TailCharge);
   FWHMTA->Fill(FWHMoverTA); 
-  }
+  PHvPA->Fill(ChargeCount,temp);
+  HR->Fill(HoverTA);  
+}
   // print number of events
   printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
@@ -279,6 +286,8 @@ void decode(char *filename) {
   MH->Write();
   hAllWaveforms->Write();
   WVA->Write();
+  HR->Write();
+  PHvPA->Write();
   FWHMTA->Write();
   rec->Write();
   outfile->Close();
