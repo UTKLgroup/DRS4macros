@@ -140,7 +140,7 @@ void decode(char *filename) {
 
   // loop over all events in data file
 
-  for (n=0 ; n<150000 ; n++) {
+  for (n=0 ; n<15000 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
