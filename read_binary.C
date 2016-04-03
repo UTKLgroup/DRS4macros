@@ -40,6 +40,9 @@
 #include "TCanvas.h"
 #include "Getline.h"
 #include <stdlib.h>
+#include <iostream>
+using namespace std;
+
 typedef struct {
   char           time_header[4];
   char           bn[2];
@@ -140,7 +143,7 @@ void decode(char *filename) {
 
   // loop over all events in data file
 
-  for (n=0 ; n<15000 ; n++) {
+  for (n=0 ; n<100000 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -182,7 +185,22 @@ void decode(char *filename) {
 
     // fill root tree
     rec->Fill();
-      
+  /Find Max value 
+  int  Maxx;
+  double temp=0.0;
+  for(i=0; i< 900 ; i++){
+        if(temp>waveform[0][i]){
+        Maxx = i;
+        temp=waveform[0][i];
+}
+}
+  //Skip events with Bipolar waveforms
+	bool skip= true;
+        for(i=0 ; i<1024; i++) {
+                if (waveform[0][i] > -temp/4){
+		skip=false;
+}}
+   if (skip == false) continue;
     // fill graph and Create Histogams
     for (i=0 ; i<1024 ; i++) {
       g->SetPoint(i, time[0][i], waveform[0][i]);
@@ -200,17 +218,7 @@ void decode(char *filename) {
   for (i=0; i<1024 ; i++){
     ghistogram->Fill(time[0][i],waveform[0][i]);
   }
-  //Find Peak Value and corresponding index 
-  int  Maxx;
-  double temp=0.0;
-  for(i=0; i< 900 ; i++){
-	if(temp>waveform[0][i]){
-	Maxx = i;
-	temp=waveform[0][i];
-}
-}
-  //Find the Base value  and it corresponding index value
-  double delta;
+  //Find the peak width
   double old_delta = abs(temp/2 - waveform[0][0]);
   int index;
   for(i=Maxx ; i<1024 ; i++){
