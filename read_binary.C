@@ -143,7 +143,7 @@ void decode(char *filename) {
 
   // loop over all events in data file
 
-  for (n=0 ; n<100000 ; n++) {
+  for (n=0 ; n<50000 ; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -185,7 +185,7 @@ void decode(char *filename) {
 
     // fill root tree
     rec->Fill();
-  /Find Max value 
+  //Find Max value 
   int  Maxx;
   double temp=0.0;
   for(i=0; i< 900 ; i++){
@@ -197,7 +197,7 @@ void decode(char *filename) {
   //Skip events with Bipolar waveforms
 	bool skip= true;
         for(i=0 ; i<1024; i++) {
-                if (waveform[0][i] > -temp/4){
+                if (waveform[0][i] > -temp/8){
 		skip=false;
 }}
    if (skip == false) continue;
@@ -219,6 +219,7 @@ void decode(char *filename) {
     ghistogram->Fill(time[0][i],waveform[0][i]);
   }
   //Find the peak width
+  double delta = 0;
   double old_delta = abs(temp/2 - waveform[0][0]);
   int index;
   for(i=Maxx ; i<1024 ; i++){
