@@ -107,10 +107,10 @@ void decode(char *filename) {
   TH1F *WVH = new TH1F("WVH","Waveoform histogram", 100,-0.5,0.02);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","hAllWaveforms",1024,0,1024,1024,-0.05,0.5);
   TH2F *PSD1 = new TH2F("MH","Height/DecayTime vs TotalArea",1000,-0.012,0,1000,-11,-4);
-  TH1F *FOMPSD2 = new TH1F("FOMPSD2","TotalArea/(Log(PulseHeight/TotalArea - Constnat))",10000,0,100000); 
-  TH1F *FOMPSD1 = new TH1F("FOMPSD2","TotalArea/(PulseHeight/DecayTime)",1000,20,80);
-  TH2F *PSD2 = new TH2F("PSD2","PulseHeight/TotalArea vs Total Area",1000,-11,0,1000,10,100);
-  TH2F *LogPSD2 = new TH2F("LogPSD2","Log(PulseHeight/TotalArea - Constant) vs Total Area",1000,-11,-4.5,1000,-5,-3.3); 
+  TH1F *FOMPSD2 = new TH1F("FOMPSD2","TotalArea/(Log(PulseHeight/TotalArea - Constnat))",10000,0.15,0.8); 
+  TH1F *FOMPSD1 = new TH1F("FOMPSD1","TotalArea/(PulseHeight/DecayTime)",1000,20,80);
+  TH2F *PSD2 = new TH2F("PSD2","PulseHeight/TotalArea vs Total Area",1000,-11,0,1000,0,0.05);
+  TH2F *LogPSD2 = new TH2F("LogPSD2","Log(PulseHeight/TotalArea - Constant) vs Total Area",1000,-11,0,1000,-8,-3); 
 
  //read time header
   fread(&th, sizeof(th), 1, f);
@@ -131,7 +131,7 @@ void decode(char *filename) {
   }
 
   // loop over all events in data file
-  for (n=0 ; n<3000; n++) {
+  for (n=0 ; n<150000; n++) {
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -218,15 +218,15 @@ void decode(char *filename) {
         index1 = i;
 }
 }
- 
- double BL =WVH->GetMean();
+ int binmax = WVH->GetMaximumBin();
+ double BL = WVH->GetXaxis()->GetBinCenter(binmax); 
  double TailStarts = index1;
   double tailintegral=0.0;
   double Total =0.0;
   double sum[900];
   //Compute each integral rectangle
   for(int i = 0 ; i < 900 ; i++){
-    sum[i] = (waveform[0][i])*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
+    sum[i] = (waveform[0][i]-BL)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
   }
   //Sum all before the tail
   for(int i = 0 ; i < TailStarts ; i++){
@@ -241,7 +241,7 @@ void decode(char *filename) {
         
 //Skip positive Charge Count
 	if(Total <-11) continue;
-	if(Total > -5.1) continue;
+	if(Total > 0) continue;
   //double ChargeCount = Total;
   //double TailCharge = tailintegral;
   //double ChargeRatio=  (tailintegral/Total); 
@@ -253,11 +253,11 @@ void decode(char *filename) {
   //double FastCharge = ChargeCount - TailCharge ;
   //double SFRatio = TailCharge/FastCharge ;
   //double FCRatio = FastCharge/ChargeCount ; 
-  double lHoverTA = log(abs(HoverTA-0.03884));
+  double lHoverTA = log(abs(HoverTA-0.0447282));
   //If Charge Ratio > 1 skip
 	//if(ChargeRatio > 1) continue;
   double FOM1 = Total/HoverTA;
-  double FOM2 = Total/MHValue ; 
+  double FOM2 = Total/lHoverTA ; 
   PSD1->Fill(MHValue,Total);
   LogPSD2->Fill(Total,lHoverTA);
   PSD2->Fill(Total,HoverTA);
