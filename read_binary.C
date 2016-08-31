@@ -266,7 +266,7 @@ void decode(char *filename) {
     
   }
   
-  //Skip events with Waveforms that have higher than a certain positive voltage 
+  //Skip events with Waveforms that have higher than a certain positive voltage relative to V = 0 
 
   bool skip = true;
 
@@ -280,8 +280,12 @@ void decode(char *filename) {
 	 
   }
 	
-    if (skip == false) continue;
+  if (skip == false){
+
+    WVH->Reset();
+    continue;
     
+  }
  //***************************************** Section for Finding Pulse Widths and Rise/Fall Times **********************************************  
 
   //Find the FWHM Value on the Left Side of Main Pulse
@@ -365,8 +369,9 @@ void decode(char *filename) {
 
   }
 
-  //***************************************** END OF  Section for Finding Pulse Widths and Rise/Fall Times **********************************************  
-  
+  //***************************************** END OF  Section for Finding Pulse Widths and Rise/Fall Times **********************************************    
+
+
   //Define index value where the tail starts
 
   double TailStarts = index1;
@@ -406,7 +411,7 @@ void decode(char *filename) {
   
   //Draw Waveforms and Fill Other Histograms
 
-  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/ && WaveformArea > 0 && TArea < 0 /*&& PSDv2>305*/){ 
+  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/ && WaveformArea > 0 /*&& TArea < 0*/ /*&& PSDv2>305*/){ 
 
     // Fill Waveform Histograms
     
@@ -416,7 +421,8 @@ void decode(char *filename) {
      hAllWaveforms->Fill(time[0][i],-1*waveform[0][i]);
      
    }
-   
+
+   /*
    
    //****** The following section can be commented out if an analysis of individual waveforms is not desired ******
    
@@ -465,10 +471,13 @@ void decode(char *filename) {
    WVH->Draw();
    c2->Update();
 
-   gPad->WaitPrimitive();
+   gPad->WaitPrimitive(); 
 
+  
   //**************** END INDIVIDAUL WAVEFORM SECTION ******************
   
+  */
+   
   FormArea->Fill(WaveformArea);
   TAoverWA->Fill(AreaRatio);
   TailArea->Fill(TArea);
@@ -490,8 +499,9 @@ void decode(char *filename) {
   }
 
   WVH->Reset();
+  //cout << "WVH Histogram was reset" << endl;
+  }
   
-}
   // print number of events
    printf("\n%d events processed, \"%s\" written.\n", n, rootfile);
    
