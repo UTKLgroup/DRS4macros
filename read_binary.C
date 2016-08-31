@@ -26,7 +26,8 @@
   Thou shalt not use tabs.
 
 */
- 
+
+#include <cstring> 
 #include "TMath.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -41,6 +42,10 @@
 #include "Getline.h"
 #include <stdlib.h>
 #include <iostream>
+#include "TH1D.h"
+#include "TROOT.h"
+#include "TLine.h"
+
 using namespace std;
 
 typedef struct {
@@ -86,6 +91,11 @@ void decode(char *filename) {
   return;
   }
 
+  // create canvas
+   
+   TCanvas *c1 = new TCanvas();
+   TCanvas *c2 = new TCanvas();
+   
   //open the root file
   strcpy(rootfile, filename);
   if (strchr(rootfile, '.'))
@@ -94,7 +104,8 @@ void decode(char *filename) {
   TFile *outfile = new TFile(rootfile, "RECREATE");
    
   // define the rec tree
-  TTree *rec = new TTree("rec","rec");
+
+  /*TTree *rec = new TTree("rec","rec");
   rec->Branch("t1", time[0]     ,"t1[1024]/D");  
   rec->Branch("t2", time[1]     ,"t2[1024]/D");  
   rec->Branch("t3", time[2]     ,"t3[1024]/D");  
@@ -102,19 +113,17 @@ void decode(char *filename) {
   rec->Branch("w1", waveform[0] ,"w1[1024]/D");
   rec->Branch("w2", waveform[1] ,"w2[1024]/D");
   rec->Branch("w3", waveform[2] ,"w3[1024]/D");
-  rec->Branch("w4", waveform[3] ,"w4[1024]/D");
+  rec->Branch("w4", waveform[3] ,"w4[1024]/D");*/
    
-  // create canvas
-  TCanvas *c1 = new TCanvas();
-   
-  // create graph
+  // create graph for plotting individual waveforms
+  
   TGraph *g = new TGraph(1024, (double *)time[0], (double *)waveform[0]);
-
+  
   // create histograms
 
-  TH1F *FormArea = new TH1F("FormArea","Waveform Area",1000,-10,10);
-  TH2D *hAllWaveforms = new TH2D("hAllWaveforms","All Waveforms",1024,-1,210,100,-0.05,0.51);
-  TH1F *TailArea = new TH1F("TailArea","Tail Area",1000,-10,10);
+  TH1F *FormArea = new TH1F("FormArea","Waveform Area",1000,-1,10);
+  TH2D *hAllWaveforms = new TH2D("hAllWaveforms","All Waveforms",1024,-1,210,100,-0.51,0.05);
+  TH1F *TailArea = new TH1F("TailArea","Tail Area",1000,-1,10);
   TH1F *TAoverWA = new TH1F("TAoverWA","Tail Area/Waveform Area",1000,-5,5);
   TH2F *TAvsWA = new TH2F("TAvsWA","Tail Area vs Waveform Area",1000,-1,8,1000,-1,3);
   TH2F *HvsTAoverWA = new TH2F("HvsTAoverWA","Pulse Height vs Tail Area/Waveform Area",1000,-3,3,1000,0,0.55);
@@ -123,11 +132,12 @@ void decode(char *filename) {
   TH1F *HoverWA1 = new TH1F("HoverWA","Pulse Height/Waveform Area",500,-0.1,1);
   TH2F *PHvWA = new TH2F("PHvWA","Pulse Height vs Waveform Area",50,-2,10,50,0,0.55);
   TH1F *MaxHeight = new TH1F("MaxHeight","Pulse Height",1000,0,0.55);
-  TH2F *HoverWAvsWA = new TH2F("HoverWAvsWA","Height/Waveform Area vs Waveform Area",1000,-1,9,1000,0,1);
+  TH2F *HoverWAvsWA = new TH2F("HoverWAvsWA","Height/Waveform Area vs Waveform Area",1000,-1,9,1000,0,0.25);
   TH2F *PHvFWHM = new TH2F("PHvFWHM","Pulse Height vs Pulse Width",1000,0,100,1000,0,0.55);
-  TH2F *PHvDT = new TH2F("PHvDT","Pulse Height vs Discharge Time",1000,0,25,1000,0,0.55);
+  TH2F *PHvDT = new TH2F("PHvDT","Pulse Height vs Discharge Time",1000,0,50,1000,0,0.55);
   TH1F *WAoverPSD1 = new TH1F("WAoverPSD1", "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
   TH2F *WAvsPSD1 = new TH2F("WAvsPSD1","Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);
+  TH1F *WVH = new TH1F("WVH","Waveform Height", 10000,-0.01,0.01);
   
   /*TH1F *FormArea = new TH1F("FormArea","Waveform Area",1000,-8,3);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","All Waveforms",1024,-1,210,100,-0.51,0.05);
@@ -146,8 +156,8 @@ void decode(char *filename) {
   TH1F *WAoverPSD1 = new TH1F("WAoverPSD1", "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
   TH2F *WAvsPSD1 = new TH2F("WAvsPSD1","Waveform Area vs Pulse Height/Discharge Time", 1000,-8,1,1000,-0.03,0);
   
-  TH2D *ghistogram = new TH2D("ghistogram","ghistogram",1024,0,200,100,-0.05,0.025);
-  TH1F *WVH = new TH1F("WVH","Waveform Height", 10000,-10,10);*/
+  TH2D *ghistogram = new TH2D("ghistogram","ghistogram",1024,0,200,100,-0.05,0.025);*/
+
   
   // read time header
   fread(&th, sizeof(th), 1, f);
@@ -169,7 +179,7 @@ void decode(char *filename) {
 
   // loop over all events in data file
 
-  for (n=0; n<100; n++){
+  for (n=0; n<200000; n++){
     // read event header
     i = fread(&eh, sizeof(eh), 1, f);
     if (i < 1)
@@ -211,152 +221,254 @@ void decode(char *filename) {
 
     // fill root tree
     //rec->Fill();
+
+
+   // Get Baseline   
+ 
+   //double binmax = WVH->GetMaximumBin();
+    
+   //Get Baseline from Fit
+
+   /*TF1 *f1 = new TF1("f1","pol0",0,5);
+   g->Fit("f1","R");
+   double BL1 = f1->GetParameter(0);*/
+   //Fill another histogram to Find peak value of each event 
+   //for (i=0; i<1024 ; i++){
+         //ghistogram->Fill(time[0][i],waveform[0][i]);
+   //}
+
+    
+  //Create Histogam of Voltage Values to Determine Baseline
+
+  for (i=5; i<900; i++) {
+
+    WVH->Fill(waveform[0][i]);
+
+  }
+
+  //Get Baseline
+
+  double BL1 = WVH->GetXaxis()->GetBinCenter(WVH->GetMaximumBin());
+    
   //Find Max value 
-  int  maxheightindex;
-  double maxheight=0.0;
-  for(i=0; i< 900 ; i++){
-    if(abs(maxheight)<abs(waveform[0][i])){
-        maxheightindex = i;
-        maxheight=waveform[0][i];
-}
-}
-  //Skip events with Bipolar waveforms
-	bool skip= true;
-        for(i=0 ; i<1024; i++) {
-                if (waveform[0][i] < -maxheight/8){
-		skip=false;
-}}
-    if (skip == false) continue;
-    // fill graph and Create Histogams
-    for (i=0 ; i<1024 ; i++) {
+
+  int  maxheightindex = 0;
+  double maxheight = BL1;
+
+  for(i=5; i< 900 ; i++){
+
+    if(abs(maxheight) < abs(waveform[0][i]-BL1)){
+
+      maxheightindex = i;
+      maxheight = waveform[0][i] - BL1;
       
-      g->SetPoint(i, time[0][i], waveform[0][i]);
-      hAllWaveforms->Fill(time[0][i],waveform[0][i]);
-      //WVH->Fill(waveform[0][i]);
-       
     }
     
-  // Get Baseline   
-  //BL = WVH->GetMean();
-  //Get Baseline from Fit
-  TF1 *f1 = new TF1("f1","pol0",0,5);
-  g->Fit("f1","R");
-  double BL1 = f1->GetParameter(0);
-  //Fill another histogram to Find peak value of each event 
-  //for (i=0; i<1024 ; i++){
-        //ghistogram->Fill(time[0][i],waveform[0][i]);
-  //}
-  //Find the peak width
-  double delta = 0;
-  double old_delta = abs(maxheight/2 - waveform[0][0]);
-  int index;
-  for(i=maxheightindex ; i<1024 ; i++){
-	delta =abs(maxheight/2 - waveform[0][i]);
-	if(delta<old_delta){
-	old_delta=delta;
-	index = i;
+  }
+  
+  //Skip events with Waveforms that have higher than a certain positive voltage 
+
+  bool skip = true;
+
+  for(i=0 ; i<1024; i++) {
+
+    if (waveform[0][i] < -maxheight/8){
+
+          skip=false;
+	  
+    }
+	 
+  }
 	
-}
-}
-  //Find the Base value on the other side of Maxx
-  double delta1;
-  double old_delta1 = abs(maxheight/2 - waveform[0][0]);
-  int index1;
-  for(i=0 ; i<maxheightindex ; i++){
-        delta1 =abs(maxheight/2 - waveform[0][i]);
-        if(delta1<old_delta1){
-        old_delta1=delta1;
-        index1 = i;
-}
-}
+    if (skip == false) continue;
+    
+ //***************************************** Section for Finding Pulse Widths and Rise/Fall Times **********************************************  
+
+  //Find the FWHM Value on the Left Side of Main Pulse
+
+  double delta = 0;
+  double old_delta = abs(maxheight/2 - (waveform[0][900]-BL1));
+  int index = maxheightindex;
+  
+  for(i=5; i<maxheightindex ; i++){
+    
+    delta = abs(maxheight/2 - (waveform[0][i]-BL1));
+    
+	if(delta<old_delta){
+
+	   old_delta=delta;
+           index = i;
+
+	}
+	
+  }
+
+  //Find the FWHM Value on the Right Side of the Main Pulse 
+  
+  double delta1 = 0;
+  double old_delta1 = abs(maxheight/2 - (waveform[0][900]-BL1));
+  int index1=maxheightindex;
+
+  for(i=maxheightindex; i<900; i++){
+
+    delta1 =abs(maxheight/2 - (waveform[0][i]-BL1));
+
+    if(delta1<old_delta1){
+
+       old_delta1=delta1;
+
+       index1 = i;	
+
+    }    
+
+  }
+
 
   //Find the Discharge Time value to left side of Max Height
-  double delta2;
-  double old_delta2 = abs(maxheight/5 - waveform[0][0]);
-  int indexDischargeMin;
-  for(i = 0; i < maxheightindex; i++){
-    delta2 = abs(maxheight/5 - waveform[0][i]);
+
+  double delta2=0;
+  double old_delta2 = abs(maxheight/5 - (waveform[0][900]-BL1));
+  int indexDischargeMin = maxheightindex;
+  
+  for(i = 5; i < maxheightindex; i++){
+
+    delta2 = abs(maxheight/5 - (waveform[0][i]-BL1));
+    
     if(delta2<old_delta2){
+
       old_delta2 = delta2;
+
       indexDischargeMin = i;
 
     }
-      
 
   }
+  
   //Find the Discharge Time value to right side of Max Height
-  double delta3;
-  double old_delta3 = abs(maxheight/5 - waveform[0][0]);
-  int indexDischargeMax;
-  for(i = maxheightindex; i < 1024; i++){
-    delta3 = abs(maxheight/5 - waveform[0][i]);
+
+  double delta3=0;
+  double old_delta3 = abs(maxheight/5 - (waveform[0][900]-BL1));
+  int indexDischargeMax = maxheightindex;
+
+  for(i = maxheightindex; i < 900; i++){
+
+    //cout << "Delta 3 is " << delta3 << " and Old Delta 3 is " << old_delta3 << " at iteration " << i << endl;
+    delta3 = abs(maxheight/5 - (waveform[0][i]-BL1));
+
     if(delta3<old_delta3){
+
       old_delta3 = delta3;
+
       indexDischargeMax = i;
+
     }
 
   }
 
+  //***************************************** END OF  Section for Finding Pulse Widths and Rise/Fall Times **********************************************  
+  
   //Define index value where the tail starts
 
-  double TailStarts = index;
-  
-  //Print Tail Start point
+  double TailStarts = index1;
 
-  //WVH->Reset();
   //ghistogram->Reset();
 
   //Define Integral Parameters 
 
-  double gIntegralVBW2=0.0;
-  double tailintegral=0.0;
-    for(int i = 1 ; i < 900 ; i++) {
-      gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2.0+(time[0][i+1]-time[0][i])/2.0);
-             }
+  double gIntegralVBW2 = 0.0;
+  double tailintegral = 0.0;
+
+  //Waveform Integral
+
+  for(int i = 5; i < 900; i++) {
     
-    //Tail integral 
-    for(int i=TailStarts ; i < 900 ; i++) {
-      tailintegral=tailintegral+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2+(time[0][i+1]-time[0][i])/2.0);
-	}
+    gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL1)*( (time[0][i]-time[0][i-1])/2.0 + (time[0][i+1]-time[0][i])/2.0 );
+
+  }
+    
+  //Tail integral 
+
+  for(int i=TailStarts ; i < 900 ; i++) {
+
+    tailintegral=tailintegral+(waveform[0][i]-BL1)*((time[0][i]-time[0][i-1])/2+(time[0][i+1]-time[0][i])/2.0);
+
+  }
 
   double DischargeTime = time[0][indexDischargeMax] - time[0][indexDischargeMin]; 
   double WaveformArea  = gIntegralVBW2;
   double TArea  = tailintegral;
   double AreaRatio = TArea/WaveformArea; 
-  double PulseWidth = time[0][index]-time[0][index1];
+  double PulseWidth = time[0][index1]-time[0][index];
   double FWHMoverWA = PulseWidth/WaveformArea; 
   double HoverWA = maxheight/WaveformArea;
   double PSDv1 = maxheight/DischargeTime;
-  double PSDv2 = WaveformArea/PSDv1; 
+  double PSDv2 = WaveformArea/PSDv1;
   
-  //Draw individual waveforms
-  if(abs(maxheight) < 0.47 && WaveformArea > 0 && PulseWidth < 20){// && PSDv2 > 300){ 
+  //Draw Waveforms and Fill Other Histograms
 
-   cout << "Waveform number: " << n << endl;    
+  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/ && WaveformArea > 0 && TArea < 0 /*&& PSDv2>305*/){ 
+
+    // Fill Waveform Histograms
+    
+   for(i=0; i < 1024; i++){
+
+     g->SetPoint(i, time[0][i], -1*waveform[0][i]);
+     hAllWaveforms->Fill(time[0][i],-1*waveform[0][i]);
+     
+   }
+   
+   
+   //****** The following section can be commented out if an analysis of individual waveforms is not desired ******
+   
+   cout << "**********************************" << endl;
+   cout << endl;
+   cout << "Waveform number: " << n << endl;
+   cout << "Pulse Width Max (ns): " << time[0][index] << " with index " << index << endl;
+   cout << "Pulse Width Min (ns): " << time[0][index1] << " with index " << index1 << endl;
    cout<<"Pulse Width (ns): "<< PulseWidth <<endl;
    cout<<"Waveform Area (V*ns): "<< WaveformArea <<endl;
    cout<<"Tail Area (V*ns): "<< TArea <<endl;
    cout<<"Max Pulse Height (V): " << maxheight << endl;
-   cout<<"Max Pulse Height Location (ns): " << time[0][maxheightindex] << endl;
+   cout<<"Max Pulse Height Location (ns): " << time[0][maxheightindex] << " with index " << maxheightindex << endl;
    cout<<"Discharge Time (ns): " << DischargeTime << endl;
-   cout<<"Min Discharge Time (ns): " << time[0][indexDischargeMin] << endl;
-   cout<<"Max Discharge Time (ns): " << time[0][indexDischargeMax] << endl;
+   cout<<"Waveform Value at 5 ns (V): " << waveform[0][5] - BL1 << endl;
+   cout<<"Min Discharge Time (ns): " << time[0][indexDischargeMin] << " with index " << indexDischargeMin << endl;
+   cout<<"Max Discharge Time (ns): " << time[0][indexDischargeMax] << " with index " << indexDischargeMax <<  endl;
+   cout<<"Baseline Value (V): " << -1*BL1 << " with bin " << WVH->GetMaximumBin() << endl;
+   cout << endl;
+
+   c1->cd();
    g->Draw("acp");
    g->GetXaxis()->SetTitle("Time (ns)");
    g->GetXaxis()->CenterTitle();
    g->GetYaxis()->SetTitle("Voltage (V)");
    g->GetYaxis()->CenterTitle();
-   g->GetXaxis()->SetTitleOffset(1.3);
-   g->GetYaxis()->SetTitleOffset(1.5);
+   g->GetXaxis()->SetTitleOffset(1);
+   g->GetYaxis()->SetTitleOffset(1);
+   g->GetXaxis()->SetTitleSize(0.05);
+   g->GetYaxis()->SetTitleSize(0.05);
+   TLine *line = new TLine(0,-1*BL1,200,-1*BL1);
+   line->SetLineColor(kRed);
+   line->Draw();
    c1->Update();
-   c1->Update();
+   //gPad->WaitPrimitive();
+
+   c2->cd();
+   WVH->GetXaxis()->SetTitle("Voltage (V)");
+   WVH->GetYaxis()->SetTitle("Counts");
+   WVH->GetXaxis()->CenterTitle();
+   WVH->GetYaxis()->CenterTitle();
+   WVH->GetXaxis()->SetTitleOffset(1);
+   WVH->GetYaxis()->SetTitleOffset(1);
+   WVH->GetXaxis()->SetTitleSize(0.05);
+   WVH->GetYaxis()->SetTitleSize(0.05);
+   WVH->Draw();
+   c2->Update();
+
    gPad->WaitPrimitive();
-   
-  // Fill Histogram
-    for(i=0; i++; i < 1024){
-      hAllWaveforms->Fill(time[0][i],waveform[0][i]);
-      }
-    
+
+  //**************** END INDIVIDAUL WAVEFORM SECTION ******************
+  
   FormArea->Fill(WaveformArea);
   TAoverWA->Fill(AreaRatio);
   TailArea->Fill(TArea);
@@ -374,7 +486,10 @@ void decode(char *filename) {
   PHvDT->Fill(DischargeTime,maxheight); 
   WAoverPSD1->Fill(PSDv2);
   WAvsPSD1->Fill(WaveformArea,PSDv1);
+  
   }
+
+  WVH->Reset();
   
 }
   // print number of events
@@ -402,12 +517,16 @@ void decode(char *filename) {
   PHvDT->Write();
   WAoverPSD1->Write();
   WAvsPSD1->Write();
-
+  
   outfile->Close();
   
 }
 
-int main() {
-  decode("07-20-16-drs4run5.dat"); //ADD FILE NAME 
+/*int main() {
+  //char dummy[22];
+  std::string dummy = "07-20-16-drs4run5.dat";
+  char *cstr = &dummy[0];
+  decode(cstr); //ADD FILE NAME 
   return 0;
-  }
+  }*/
+
