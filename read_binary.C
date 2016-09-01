@@ -125,16 +125,16 @@ void decode(char *filename) {
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","All Waveforms",1024,-1,210,100,-0.51,0.05);
   TH1F *TailArea = new TH1F("TailArea","Tail Area",1000,-1,10);
   TH1F *TAoverWA = new TH1F("TAoverWA","Tail Area/Waveform Area",1000,-5,5);
-  TH2F *TAvsWA = new TH2F("TAvsWA","Tail Area vs Waveform Area",1000,-1,8,1000,-1,3);
-  TH2F *HvsTAoverWA = new TH2F("HvsTAoverWA","Pulse Height vs Tail Area/Waveform Area",1000,-3,3,1000,0,0.55);
-  TH2F *FWHMvsWA = new TH2F("FWHMvsWA","FWHM  vs Waveform Area",1000,-1,8,1000,-5,25);
+  TH2F *TAvsWA = new TH2F("TAvsWA","Waveform Area vs Tail Area",1000,-1,8,1000,-1,3);
+  TH2F *HvsTAoverWA = new TH2F("HvsTAoverWA","Tail Area/Waveform Area vs Pulse Height",1000,-3,3,1000,0,0.55);
+  TH2F *FWHMvsWA = new TH2F("FWHMvsWA","Waveform Area vs FWHM",1000,-1,8,1000,-5,25);
   TH1F *FWHMoverWA1 = new TH1F("FWHMoverWA","FWHM/Waveform Area",500,-150,500);
   TH1F *HoverWA1 = new TH1F("HoverWA","Pulse Height/Waveform Area",500,-0.1,1);
-  TH2F *PHvWA = new TH2F("PHvWA","Pulse Height vs Waveform Area",50,-2,10,50,0,0.55);
+  TH2F *PHvWA = new TH2F("PHvWA","Waveform Area vs Pulse Height",50,-2,10,50,0,0.55);
   TH1F *MaxHeight = new TH1F("MaxHeight","Pulse Height",1000,0,0.55);
-  TH2F *HoverWAvsWA = new TH2F("HoverWAvsWA","Height/Waveform Area vs Waveform Area",1000,-1,9,1000,0,0.25);
-  TH2F *PHvFWHM = new TH2F("PHvFWHM","Pulse Height vs Pulse Width",1000,0,100,1000,0,0.55);
-  TH2F *PHvDT = new TH2F("PHvDT","Pulse Height vs Discharge Time",1000,0,50,1000,0,0.55);
+  TH2F *HoverWAvsWA = new TH2F("HoverWAvsWA","Waveform Area vs Height/Waveform Area",1000,-1,9,1000,0,0.25);
+  TH2F *PHvFWHM = new TH2F("PHvFWHM","Pulse Width vs Pulse Height",1000,0,100,1000,0,0.55);
+  TH2F *PHvDT = new TH2F("PHvDT","Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
   TH1F *WAoverPSD1 = new TH1F("WAoverPSD1", "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
   TH2F *WAvsPSD1 = new TH2F("WAvsPSD1","Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);
   TH1F *WVH = new TH1F("WVH","Waveform Height", 10000,-0.01,0.01);
@@ -267,7 +267,7 @@ void decode(char *filename) {
   }
   
   //Skip events with Waveforms that have higher than a certain positive voltage relative to V = 0 
-
+  
   bool skip = true;
 
   for(i=0 ; i<1024; i++) {
@@ -285,7 +285,8 @@ void decode(char *filename) {
     WVH->Reset();
     continue;
     
-  }
+    }
+  
  //***************************************** Section for Finding Pulse Widths and Rise/Fall Times **********************************************  
 
   //Find the FWHM Value on the Left Side of Main Pulse
@@ -409,9 +410,9 @@ void decode(char *filename) {
   double PSDv1 = maxheight/DischargeTime;
   double PSDv2 = WaveformArea/PSDv1;
   
-  //Draw Waveforms and Fill Other Histograms
+  //************************************ Draw Waveforms and Fill Other Histograms **************************************
 
-  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/ && WaveformArea > 0 /*&& TArea < 0*/ /*&& PSDv2>305*/){ 
+  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/  && WaveformArea > 0 /* && TArea < 0*/  && PSDv2 >= 305){ 
 
     // Fill Waveform Histograms
     
@@ -422,8 +423,7 @@ void decode(char *filename) {
      
    }
 
-   /*
-   
+   /*   
    //****** The following section can be commented out if an analysis of individual waveforms is not desired ******
    
    cout << "**********************************" << endl;
@@ -453,6 +453,8 @@ void decode(char *filename) {
    g->GetYaxis()->SetTitleOffset(1);
    g->GetXaxis()->SetTitleSize(0.05);
    g->GetYaxis()->SetTitleSize(0.05);
+   //g->GetYaxis()->SetRangeUser(-0.5,0.1);
+   //g->Draw("acp");
    TLine *line = new TLine(0,-1*BL1,200,-1*BL1);
    line->SetLineColor(kRed);
    line->Draw();
@@ -500,6 +502,7 @@ void decode(char *filename) {
 
   WVH->Reset();
   //cout << "WVH Histogram was reset" << endl;
+  
   }
   
   // print number of events
