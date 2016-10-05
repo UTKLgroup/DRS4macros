@@ -388,7 +388,7 @@ void decode(char *filename) {
 
   for(int i = 5; i < 900; i++) {
     
-    gIntegralVBW2=gIntegralVBW2+(waveform[0][i]-BL1)*( (time[0][i]-time[0][i-1])/2.0 + (time[0][i+1]-time[0][i])/2.0 );
+    gIntegralVBW2 = gIntegralVBW2+(waveform[0][i]-BL1)*( (time[0][i]-time[0][i-1])/2.0 + (time[0][i+1]-time[0][i])/2.0 );
 
   }
     
