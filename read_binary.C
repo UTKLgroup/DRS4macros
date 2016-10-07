@@ -121,7 +121,7 @@ void decode(char *filename) {
   
   // create histograms
 
-  TH1F *FormArea = new TH1F("FormArea","Waveform Area",1000,-1,10);
+  TH1F *FormArea = new TH1F("FormArea","Waveform Area",1000,-1,100);
   TH2D *hAllWaveforms = new TH2D("hAllWaveforms","All Waveforms",1024,-1,210,100,-0.51,0.05);
   TH1F *TailArea = new TH1F("TailArea","Tail Area",1000,-1,10);
   TH1F *TAoverWA = new TH1F("TAoverWA","Tail Area/Waveform Area",1000,-5,5);
@@ -268,7 +268,7 @@ void decode(char *filename) {
   
   //Skip events with Waveforms that have higher than a certain positive voltage relative to V = 0 
   
-  bool skip = true;
+  /*  bool skip = true;
 
   for(i=0 ; i<1024; i++) {
 
@@ -286,7 +286,7 @@ void decode(char *filename) {
     continue;
     
     }
-  
+  */
  //***************************************** Section for Finding Pulse Widths and Rise/Fall Times **********************************************  
 
   //Find the FWHM Value on the Left Side of Main Pulse
@@ -411,8 +411,8 @@ void decode(char *filename) {
   double PSDv2 = WaveformArea/PSDv1;
   
   //************************************ Draw Waveforms and Fill Other Histograms **************************************
-
-  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/  && WaveformArea > 0 /* && TArea < 0*/  && PSDv2 >= 305){ 
+  
+  //  if(/*maxheight >= 0.055 && maxheight <= 0.065 &&*/ abs(maxheight) < 0.49 /*&& PSDv2 == 0*/  && WaveformArea > 0 /* && TArea < 0*/  /*&& PSDv2 >= 305*/){ 
 
     // Fill Waveform Histograms
     
@@ -421,9 +421,9 @@ void decode(char *filename) {
      g->SetPoint(i, time[0][i], -1*waveform[0][i]);
      hAllWaveforms->Fill(time[0][i],-1*waveform[0][i]);
      
-   }
+     }
 
-   /*   
+   /*      
    //****** The following section can be commented out if an analysis of individual waveforms is not desired ******
    
    cout << "**********************************" << endl;
@@ -477,8 +477,8 @@ void decode(char *filename) {
 
   
   //**************** END INDIVIDAUL WAVEFORM SECTION ******************
+*/  
   
-  */
    
   FormArea->Fill(WaveformArea);
   TAoverWA->Fill(AreaRatio);
@@ -498,7 +498,7 @@ void decode(char *filename) {
   WAoverPSD1->Fill(PSDv2);
   WAvsPSD1->Fill(WaveformArea,PSDv1);
   
-  }
+  //}
 
   WVH->Reset();
   //cout << "WVH Histogram was reset" << endl;
