@@ -93,7 +93,7 @@ DATAINFO find_header(FILE *f);
 DATAINFO output_dat(FILE *f, DATAINFO dat);
 QUERYUSER queries();
 
-void decode(char *filename) {
+void decode(char *filename){
 
   THEADER th;
   EHEADER eh;
@@ -116,14 +116,6 @@ void decode(char *filename) {
 
   datfh = find_header(f);
 
-  //open the root file
-
-  strcpy(rootfile, filename);
-  if (strchr(rootfile, '.'))
-    *strchr(rootfile, '.') = 0;
-  strcat(rootfile, ".root");
-  TFile *outfile = new TFile(rootfile, "RECREATE");
-
   //query user for information
 
   quer = queries();
@@ -133,22 +125,8 @@ void decode(char *filename) {
   TCanvas *c1 = new TCanvas();
   TCanvas *c2 = new TCanvas();
 
-  //create graph for plotting individual waveforms
-
-  TDirectory *drs4 = outfile->mkdir("DRS4 Data");
-  drs4->cd();
-  TDirectory *drs4chn[(datfh.inpch).size()];
+  //define dynamic array of pointers for histograms to be plotted
   
-  /*vector<TH1F> FormAreaVec;
-   
-    for(v = 0; v < (datfh.inpch).size(); v++){
-     
-    FormAreaVec.push_back(TH1F(Form("WaveformArea_ch%i",datfh.inpch[v]+1),"Tail Area",500,-1,10));   
-     
-    }*/
-
-  //loop over relevant channels
-
   TH2D** hAllWaveforms = new TH2D*[(datfh.inpch).size()];
 
   TH1F** FormArea = new TH1F*[(datfh.inpch).size()];
@@ -158,7 +136,8 @@ void decode(char *filename) {
   TH1F** HoverWA1 = new TH1F*[(datfh.inpch).size()];
   TH1F** MaxHeight = new TH1F*[(datfh.inpch).size()];
   TH1F** WAoverPSD1 = new TH1F*[(datfh.inpch).size()];
-
+  TH1F** WVH = new TH1F*[(datfh.inpch).size()];
+  
   TH2F** TAvsWA = new TH2F*[(datfh.inpch).size()];
   TH2F** HvsTAoverWA = new TH2F*[(datfh.inpch).size()];
   TH2F** FWHMvsWA = new TH2F*[(datfh.inpch).size()];
@@ -167,13 +146,15 @@ void decode(char *filename) {
   TH2F** PHvFWHM = new TH2F*[(datfh.inpch).size()];
   TH2F** PHvDT = new TH2F*[(datfh.inpch).size()];
   TH2F** WAvsPSD1 = new TH2F*[(datfh.inpch).size()];
-     
+  TGraph** g = new TGraph*[(datfh.inpch).size()];
+
+
+  printf("\nCommencing binary data decoding...\n");
+  
+  //loop to pre-define relevant histograms for all input channels
+
   for(chn = 0; chn < (datfh.inpch).size(); chn++){
-   
-    //create directories for the channels
-    drs4chn[chn] = drs4->mkdir(Form("channel%i",datfh.inpch[chn]+1));
-    drs4chn[chn]->cd();
-    
+
     // create histograms for the Tree
     hAllWaveforms[chn] = new TH2D(Form("AllWaveforms_ch%i",datfh.inpch[chn]+1),"All Waveforms",1024,-1,260,1000,-0.51,0.05);
     FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",500,-1,10);
@@ -192,36 +173,46 @@ void decode(char *filename) {
     WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
     WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);
 
-    TH1F *WVH = new TH1F(Form("WVH_ch%i",datfh.inpch[chn]+1),"Waveform Height", 10000,-0.01,0.01);
-    TGraph *g = new TGraph(1024, dat1.time[datfh.inpch[chn]], dat1.waveform[datfh.inpch[chn]]);
-         
-    //loop over events
-   
-    for (n=0; n < quer.ev; n++){
+    WVH[chn] = new TH1F(Form("WVH_ch%i",datfh.inpch[chn]+1),"Waveform Height", 10000,-0.01,0.01);
+    g[chn] = new TGraph(1024, dat1.time[datfh.inpch[chn]], dat1.waveform[datfh.inpch[chn]]);
+    
+  }
 
-      //use output_dat function to decode binary data for each event and output waveform and time arrays for ROOT purposes
-      //cout << "Position at beginning of output_dat method is " << ftell(f) << endl;
+  //loop over events
 
-      i = fread(&eh, sizeof(eh), 1, f);
-      if (i < 1) 
-	break;
+  for(n=0; n < quer.ev; n++){
 
-      //cout << "Position after first fread of output_dat is " << ftell(f) << endl;;
+    //cout << "Position before beginning of output_dat method is " << ftell(f) << endl;
 
-      dat1 = output_dat(f, datfh);
+    i = fread(&eh, sizeof(eh), 1, f);
+      
+    if (i < 1){
+
+      cout << "i is " << i << " and ferror(f) returns " << ferror(f) << " and feof(f) returns " << feof(f) << " and break line was triggered in event " << n << " of channel " << chn << endl;
+      break;
+	
+    }
+
+    //cout << "Position after fread before output_dat is " << ftell(f) << endl;;
+
+    //use output_dat function to decode binary data for each event and output waveform and time arrays for ROOT purposes
+    dat1 = output_dat(f, datfh);
      
-      //begin ROOT portion of macro
+    //loop over all the channels for each event
+    
+    for(chn = 0; chn < (datfh.inpch).size(); chn++){
 
+      
       for (i=5; i<900; i++){
 	          
-	WVH->Fill(dat1.waveform[datfh.inpch[chn]][i]);
+	WVH[chn]->Fill(dat1.waveform[datfh.inpch[chn]][i]);
 
       }
 
 
       //Get Baseline
 
-      double BL1 = WVH->GetXaxis()->GetBinCenter(WVH->GetMaximumBin());
+      double BL1 = WVH[chn]->GetXaxis()->GetBinCenter(WVH[chn]->GetMaximumBin());
 
 
       //Find Max value on the Waveform
@@ -241,8 +232,10 @@ void decode(char *filename) {
       }
 
 
+      //Skip events with Waveforms that have higher than a certain positive voltage relative to V = BL1
+      
       if(quer.query2 == 'y'){
-	//Skip events with Waveforms that have higher than a certain positive voltage relative to V = BL1
+
 
 	bool skip = true;
 
@@ -258,7 +251,7 @@ void decode(char *filename) {
 
 	if (skip == false){
 
-	  WVH->Reset();
+	  WVH[chn]->Reset();
 	  continue;
 
 	}
@@ -388,7 +381,7 @@ void decode(char *filename) {
       double PSDv1 = maxheight/DischargeTime;
       double PSDv2 = WaveformArea/PSDv1;
 
-      //************************************ Draw Waveforms and Fill Other Histograms **************************************
+      //************************************ Draw Individaul Waveforms and/or Fill Other Histogram  **************************************
 
       if(abs(maxheight) < 0.49){
 
@@ -396,7 +389,7 @@ void decode(char *filename) {
 
 	for(i=0; i < 1024; i++){
 
-	  g->SetPoint(i, dat1.time[datfh.inpch[chn]][i], -1*dat1.waveform[datfh.inpch[chn]][i]);
+	  g[chn]->SetPoint(i, dat1.time[datfh.inpch[chn]][i], -1*dat1.waveform[datfh.inpch[chn]][i]);
 	  hAllWaveforms[chn]->Fill(dat1.time[datfh.inpch[chn]][i],-1*dat1.waveform[datfh.inpch[chn]][i]);
 
 	}
@@ -416,35 +409,35 @@ void decode(char *filename) {
 	  cout<<"Discharge Time (ns): " << DischargeTime << endl;
 	  cout<<"Min Discharge Time (ns): " << dat1.time[datfh.inpch[chn]][indexDischargeMin] << " with index " << indexDischargeMin << endl;
 	  cout<<"Max Discharge Time (ns): " << dat1.time[datfh.inpch[chn]][indexDischargeMax] << " with index " << indexDischargeMax <<  endl;
-	  cout<<"Baseline Value (V): " << -1*BL1 << " with bin " << WVH->GetMaximumBin() << endl;
+	  cout<<"Baseline Value (V): " << -1*BL1 << " with bin " << WVH[chn]->GetMaximumBin() << endl;
 	  cout<<"Waveform Value at 5 ns (V): " << dat1.waveform[datfh.inpch[chn]][5] - BL1 << endl;
 	  cout << endl;
 
 	  c1->cd();
-	  g->Draw("acp");
-	  g->GetXaxis()->SetTitle("Time (ns)");
-	  g->GetXaxis()->CenterTitle();
-	  g->GetYaxis()->SetTitle("Voltage (V)");
-	  g->GetYaxis()->CenterTitle();
-	  g->GetXaxis()->SetTitleOffset(1);
-	  g->GetYaxis()->SetTitleOffset(1);
-	  g->GetXaxis()->SetTitleSize(0.05);
-	  g->GetYaxis()->SetTitleSize(0.05);
+	  g[chn]->Draw("acp");
+	  g[chn]->GetXaxis()->SetTitle("Time (ns)");
+	  g[chn]->GetXaxis()->CenterTitle();
+	  g[chn]->GetYaxis()->SetTitle("Voltage (V)");
+	  g[chn]->GetYaxis()->CenterTitle();
+	  g[chn]->GetXaxis()->SetTitleOffset(1);
+	  g[chn]->GetYaxis()->SetTitleOffset(1);
+	  g[chn]->GetXaxis()->SetTitleSize(0.05);
+	  g[chn]->GetYaxis()->SetTitleSize(0.05);
 	  TLine *line = new TLine(0,-1*BL1,200,-1*BL1);
 	  line->SetLineColor(kRed);
 	  line->Draw();
 	  c1->Update();
 
 	  c2->cd();
-	  WVH->GetXaxis()->SetTitle("Voltage (V)");
-	  WVH->GetYaxis()->SetTitle("Counts");
-	  WVH->GetXaxis()->CenterTitle();
-	  WVH->GetYaxis()->CenterTitle();
-	  WVH->GetXaxis()->SetTitleOffset(1);
-	  WVH->GetYaxis()->SetTitleOffset(1);
-	  WVH->GetXaxis()->SetTitleSize(0.05);
-	  WVH->GetYaxis()->SetTitleSize(0.05);
-	  WVH->Draw();
+	  WVH[chn]->GetXaxis()->SetTitle("Voltage (V)");
+	  WVH[chn]->GetYaxis()->SetTitle("Counts");
+	  WVH[chn]->GetXaxis()->CenterTitle();
+	  WVH[chn]->GetYaxis()->CenterTitle();
+	  WVH[chn]->GetXaxis()->SetTitleOffset(1);
+	  WVH[chn]->GetYaxis()->SetTitleOffset(1);
+	  WVH[chn]->GetXaxis()->SetTitleSize(0.05);
+	  WVH[chn]->GetYaxis()->SetTitleSize(0.05);
+	  WVH[chn]->Draw();
 	  c2->Update();
 
 	  gPad->WaitPrimitive();
@@ -452,8 +445,6 @@ void decode(char *filename) {
 	}
 
 	//**************** END INDIVIDAUL WAVEFORM SECTION ******************
-
-
        
 	FormArea[chn]->Fill(WaveformArea);
 	TAoverWA[chn]->Fill(AreaRatio);
@@ -475,16 +466,35 @@ void decode(char *filename) {
 
       }
 
-      WVH->Reset();
-
+      WVH[chn]->Reset();
+      
     }
+    
+  }
 
-    // print number of events
-    printf("\n%d events processed in channel %d\n", quer.ev, datfh.inpch[chn]+1);
+  printf("\n%d events processed in all channels \n", n);
+  
+  //open the root file
+  strcpy(rootfile, filename);
+  if (strchr(rootfile, '.'))
+    *strchr(rootfile, '.') = 0;
+  strcat(rootfile, ".root");
+  TFile *outfile = new TFile(rootfile, "RECREATE");
+  
+  //create directory structure plotting individual waveforms
 
-    // save and close root file
+  TDirectory *drs4 = outfile->mkdir("DRS4 Data");
+  drs4->cd();
+  TDirectory *drs4chn[(datfh.inpch).size()];
+  
+  for(chn = 0; chn < (datfh.inpch).size(); chn++){
+
+    //create directories for the channels
+    drs4chn[chn] = drs4->mkdir(Form("channel%i",datfh.inpch[chn]+1));
+    drs4chn[chn]->cd();
 
     hAllWaveforms[chn]->Write();
+
     FormArea[chn]->Write();
     TailArea[chn]->Write();
     TAvsWA[chn]->Write();
@@ -505,7 +515,7 @@ void decode(char *filename) {
 
   }
 
-  printf("\n%s written \n", rootfile);
+  printf("\n%s written \n \n", rootfile);
   outfile->Close();
 
 }
@@ -524,12 +534,12 @@ DATAINFO find_header(FILE *f){
     sizeof(hdr) is 4
     sizeof(float) is 4
     sizeof(eh) is 32
-    sizeof(short) is 2
+    sizeof(short) is 2 */
 
-   */
-  //cout << "Position at beginning is " << ftell(f) << endl;
+   
+  //cout << "Position at beginning of find_header is " << ftell(f) << endl;
   fread(&th, sizeof(th), 1, f);
-  //cout << "Position after first fread is " << ftell(f) << endl;
+  //cout << "Position after 1st fread of find_header is " << ftell(f) << endl;
   
   //printf("Found data for board #%d\n", th.board_serial_number);
 
@@ -539,7 +549,7 @@ DATAINFO find_header(FILE *f){
 
   for (ch=0; ch<5 ; ch++) {
     fread(dat.hdr, sizeof(dat.hdr), 1, f);
-    //cout << "Position in the file after 2nd fread is " << ftell(f) << endl;
+    //cout << "Position after 2nd fread of find_header is " << ftell(f) << endl;
     if (dat.hdr[0] != 'C') {
 
       // event header found
@@ -549,9 +559,9 @@ DATAINFO find_header(FILE *f){
     }
 
     i = dat.hdr[3] - '0' - 1;
-    printf("Found timing calibration for channel #%d\n", i+1);
+    printf("\n Found timing calibration for channel #%d\n\n", i+1);
     fread(&dat.bin_width[i][0], sizeof(float), 1024, f);
-    //cout << "Position in the file after 3rd fread is " << ftell(f) << " and channel is " << i+1 << endl;
+    //cout << "Position in the file after 3rd fread of find_header is " << endl;
 
     (dat.inpch).push_back(i);
     
@@ -572,21 +582,26 @@ DATAINFO output_dat(FILE *f, DATAINFO dat){
   double t1, t2, dt;
 
     // read event header
-    //cout << "Position at beginning of output_dat method is " << ftell(f) << endl;
-    //i = fread(&eh, sizeof(eh), 1, f);
-    //cout << "Position after first fread of output_dat is " << ftell(f) << endl;;
-    //printf("\nFound event #%d, i value is %i\n", eh.event_serial_number, i);
+
+    /*cout << "Position at beginning of output_dat method is " << ftell(f) << endl;
+    i = fread(&eh, sizeof(eh), 1, f);
+    cout << "Position after first fread of output_dat is " << ftell(f) << endl;;
+
+    printf("\nFound event #%d, i value is %i\n", eh.event_serial_number, i);
     
-    /*if (i < 1)
-      
-      exit(-1);*/
+    if (i < 1){
+
+      cout << "Exit statement has been reached " << endl; 
+       exit(-1);
+
+       }*/
 
     // reach channel data
     
     for (ch=0 ; ch<5 ; ch++) {
 
       i = fread(dat1.hdr, sizeof(dat1.hdr), 1, f);
-      //cout << "Position after 2nd fread of output_dath is " << ftell(f) << endl;
+      //cout << "Position after 1st fread within output_dath is " << ftell(f) << endl;
       if (i < 1)
         break;
 
@@ -600,7 +615,7 @@ DATAINFO output_dat(FILE *f, DATAINFO dat){
       //cout << "chn_index is " << chn_index << endl;
       
       fread(dat1.voltage, sizeof(short), 1024, f);
-      //cout << "Position after 3nd fread of output_dath is " << ftell(f) << " and channel number is " << chn_index+1 << endl;
+      //cout << "Position after 2nd fread of output_dath is " << ftell(f) << " and channel number is " << chn_index+1 << endl;
       for (i=0 ; i<1024 ; i++) {
         // convert data to volts
         dat1.waveform[chn_index][i] = -1*(dat1.voltage[i] / 65536. - 0.5);
@@ -659,7 +674,7 @@ QUERYUSER queries(){
 
   while(true){
 
-    cout << "Would you like to skip waveforms with positive polarity peaks higher than 25% of pulse minimum? Answer with y or n: ";
+    cout << "Would you like to skip waveforms with positive overshoots higher than 25% of pulse minimum? Answer with y or n: ";
     getline(cin,quer.query2);
     if(quer.query2 == 'y' || quer.query2 == 'n')
       break;
