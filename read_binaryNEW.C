@@ -76,6 +76,7 @@ typedef struct {
   double waveform[4][1024], time[4][1024];
   float bin_width[4][1024];
   vector<int> inpch;
+  int ext;
   
 }DATAINFO;
 
@@ -153,6 +154,9 @@ void decode(char *filename){
   for(chn = 0; chn < (datfh.inpch).size(); chn++){
 
     // create histograms for the Tree
+
+    //for Cryostat testing
+      
     hAllWaveforms[chn] = new TH2D(Form("AllWaveforms_ch%i",datfh.inpch[chn]+1),"All Waveforms",1024,-1,1500,1000,-0.51,0.05);
     FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",250,0,50);
     TailArea[chn] = new TH1F(Form("TailArea_ch%i",datfh.inpch[chn]+1),"Tail Area",250,0,50);
@@ -169,7 +173,27 @@ void decode(char *filename){
     PHvDT[chn] = new TH2F(Form("PHvDT_ch%i",datfh.inpch[chn]+1),"Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
     WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",250,0,1000);
     WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,0,50,1000,0,0.03);
+    
 
+    /* //for liquid scintillator 
+       hAllWaveforms[chn] = new TH2D(Form("AllWaveforms_ch%i",datfh.inpch[chn]+1),"All Waveforms",1024,-1,260,1000,-0.51,0.05);
+       FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",500,-1,10);
+       TailArea[chn] = new TH1F(Form("TailArea_ch%i",datfh.inpch[chn]+1),"Tail Area",500,-1,10);
+       TAoverWA[chn] = new TH1F(Form("TAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area",500,-1,1);
+       TAvsWA[chn] = new TH2F(Form("TAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Tail Area",1000,-1,8,1000,-1,3);
+       PHvsTAoverWA[chn] = new TH2F(Form("PHvsTAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area vs Pulse Height",1000,-3,3,1000,0,0.55);
+       FWHMvsWA[chn] = new TH2F(Form("FWHMvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs FWHM",1000,-1,8,1000,-5,25);
+       FWHMoverWA[chn] = new TH1F(Form("FWHMoverWA_ch%i",datfh.inpch[chn]+1),"FWHM/Waveform Area",500,-150,500);
+       PHoverWA[chn] = new TH1F(Form("PHoverWA_ch%i",datfh.inpch[chn]+1),"Pulse Height/Waveform Area",500,-0.1,1);
+       PHvWA[chn] = new TH2F(Form("PHvWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height",50,-2,10,50,0,0.55);
+       MaxHeight[chn] = new TH1F(Form("MaxHeight_ch%i",datfh.inpch[chn]+1),"Pulse Height",100,0,0.55);
+       PHoverWAvsWA[chn] = new TH2F(Form("PHoverWAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Height/Waveform Area",1000,-1,9,1000,0,0.25);
+       PHvFWHM[chn] = new TH2F(Form("PHvFWHM_ch%i",datfh.inpch[chn]+1),"Pulse Width vs Pulse Height",1000,0,100,1000,0,0.55);
+       PHvDT[chn] = new TH2F(Form("PHvDT_ch%i",datfh.inpch[chn]+1),"Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
+       WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
+       WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);*/
+
+    
     WVH[chn] = new TH1F(Form("WVH_ch%i",datfh.inpch[chn]+1),"Waveform Height", 10000,-0.01,0.01);
     g[chn] = new TGraph(1024, dat1.time[datfh.inpch[chn]], dat1.waveform[datfh.inpch[chn]]);
     
@@ -182,12 +206,19 @@ void decode(char *filename){
   for(n=0; n < quer.ev; n++){
 
     //use output_dat function to decode binary data for each event and output waveform and time arrays for ROOT purposes
+   
     dat1 = output_dat(f, datfh);
-     
+
+    if(dat1.ext < 1){
+
+      break;
+
+    }
     //loop over all the channels for each event
     
     for(chn = 0; chn < (datfh.inpch).size(); chn++){
 
+      //fill waveform into histogram to determine 
       
       for (i=5; i<900; i++){
 	          
@@ -328,7 +359,7 @@ void decode(char *filename){
       }
 
       //***************************************** END OF  Section for Finding Pulse Widths and Rise/Fall Times **********************************************
-
+      ///Find Tail and Waveform Areas and define all quantities from these and above parameters
 
       //Define index value where the tail starts
 
@@ -513,7 +544,7 @@ DATAINFO find_header(FILE *f){
   THEADER th;
   EHEADER eh;
   DATAINFO dat;
-  int i, ch, chn_index, l, m, p;
+  int i, ch, chn_index, t, d, b;
 
   // read time header
   /*sizeof(th) is 8
@@ -521,11 +552,8 @@ DATAINFO find_header(FILE *f){
     sizeof(float) is 4
     sizeof(eh) is 32
     sizeof(short) is 2 */
-
-   
-  //cout << "Position at beginning of find_header is " << ftell(f) << endl;
-  l = fread(&th, sizeof(th), 1, f);
-  //  cout << "Position after 1st fread of find_header is " << ftell(f) << endl;
+  
+  t = fread(&th, sizeof(th), 1, f);
   
   //printf("Found data for board #%d\n", th.board_serial_number);
 
@@ -534,8 +562,8 @@ DATAINFO find_header(FILE *f){
   memset(dat.bin_width, sizeof(dat.bin_width), 0);
 
   for (ch=0; ch<5 ; ch++) {
-    m = fread(dat.hdr, sizeof(dat.hdr), 1, f);
-    //cout << "Position after 2nd fread of find_header is " << ftell(f) << endl;
+    d = fread(dat.hdr, sizeof(dat.hdr), 1, f);
+
     if (dat.hdr[0] != 'C') {
 
       // event header found
@@ -546,8 +574,7 @@ DATAINFO find_header(FILE *f){
 
     i = dat.hdr[3] - '0' - 1;
     printf("\n Found timing calibration for channel #%d\n\n", i+1);
-    p = fread(&dat.bin_width[i][0], sizeof(float), 1024, f);
-    //cout << "Position in the file after 3rd fread of find_header is " << ftell(f) << endl;
+    b = fread(&dat.bin_width[i][0], sizeof(float), 1024, f);
 
     (dat.inpch).push_back(i);
     
@@ -569,29 +596,23 @@ DATAINFO output_dat(FILE *f, DATAINFO dat){
 
     // read event header
 
-    //cout << "Position at beginning of output_dat method is " << ftell(f) << endl;
-    i = fread(&eh, sizeof(eh), 1, f);
-    //cout << "Position after first fread of output_dat is " << ftell(f) << endl;;
+    dat1.ext = fread(&eh, sizeof(eh), 1, f);
 
     //printf("\nFound event #%d, i value is %i\n", eh.event_serial_number, i);
-
-    //cout << "i is " << i << " and sizeof(eh) is " << sizeof(eh) << endl;
-
-    //cout << "eh.trigger_cell is " << eh.trigger_cell << endl;
     
-    if (i < 1){
+    /*if (dat1.ext < 1){
 
-       //cout << "Exit statement has been reached " << endl; 
+       cout << "exit statement was reached" << endl;
        exit(-1);
 
-       }
+       }*/
 
     // reach channel data
     
     for (ch=0 ; ch<5 ; ch++) {
 
       i = fread(dat1.hdr, sizeof(dat1.hdr), 1, f);
-      //cout << "Position after 1st fread within output_dath is " << ftell(f) << endl;
+
       if (i < 1)
         break;
 
@@ -602,10 +623,10 @@ DATAINFO output_dat(FILE *f, DATAINFO dat){
       }
 
       chn_index = dat1.hdr[3] - '0' - 1;
-      //cout << "chn_index is " << chn_index << endl;
+
       
       k = fread(dat1.voltage, sizeof(short), 1024, f);
-      //cout << "Position after 2nd fread of output_dath is " << ftell(f) << " and channel number is " << chn_index+1 << endl;
+
       for (i=0 ; i<1024 ; i++) {
         // convert data to volts
         dat1.waveform[chn_index][i] = -1*(dat1.voltage[i] / 65536. - 0.5);
@@ -623,11 +644,13 @@ DATAINFO output_dat(FILE *f, DATAINFO dat){
     t1 = dat1.time[0][(1024-eh.trigger_cell) % 1024];
 
     for (ch=1 ; ch<4 ; ch++) {
+
       t2 = dat1.time[ch][(1024-eh.trigger_cell) % 1024];
       dt = t1 - t2;
+
       for (i=0 ; i<1024 ; i++){
         dat1.time[ch][i] += dt;
-	//cout << "dat1.time[chn][i] is " << dat1.time[ch][i] << endl;
+
       }
     }
 
