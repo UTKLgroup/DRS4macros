@@ -1,22 +1,19 @@
 /*
 
-  This macro was adapted from a macro written by Stefan Ritt of PSI which can be
-  found here:
+  This macro is meant to decode data taken on any channel or set of channels on the DRS4 digitizer. 
+  It was adapted from a macro written by Stefan Ritt of PSI which can be found here:
   https://midas.psi.ch/elogs/DRS4+Forum/361
 
-  Primary Author: Saad Khan saadakhan@utexas.edu
+  Primary Author: Abhishek Rajput abhi_rajput5@utexas.edu
   Other Author(s): Will Flanagan will.flanagan@utexas.edu
-                 : Abhishek Rajput abhi_rajput5@utexas.edu
-
+     
   You can always pull the latest version of this code with:
   git clone https://github.com/UTKLgroup/DRS4macros
 
   root [0] .L read_binary.C+
   root [1] decode("filename.dat");
-  - The Histogram disappears once the file is saved. Type in the following to
-  make the histogram again.
-  root [2] TFile MyFile("filename.root")
-  root [3] h1->Draw()
+
+  filename.root will be written to the same directory as the binary file upon completion of decoding
 
 */
 
