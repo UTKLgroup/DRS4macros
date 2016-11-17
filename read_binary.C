@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TROOT.h"
 #include "TLine.h"
 #include <sstream>
@@ -137,7 +138,6 @@ void decode(char *filename){
   TH1F** PHoverWA = new TH1F*[(datfh.inpch).size()];
   TH1F** MaxHeight = new TH1F*[(datfh.inpch).size()];
   TH1F** WAoverPSD1 = new TH1F*[(datfh.inpch).size()];
-  TH1F** WVH = new TH1F*[(datfh.inpch).size()];
   
   TH2F** TAvsWA = new TH2F*[(datfh.inpch).size()];
   TH2F** PHvsTAoverWA = new TH2F*[(datfh.inpch).size()];
@@ -177,9 +177,10 @@ void decode(char *filename){
     WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",250,0,1000);
     WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,0,50,1000,0,0.03);
     
-
-    /* //for liquid scintillator 
-       hAllWaveforms[chn] = new TH2D(Form("AllWaveforms_ch%i",datfh.inpch[chn]+1),"All Waveforms",1024,-1,260,1000,-0.51,0.05);
+     //for liquid scintillator 
+    /*hAllWaveforms[chn] = new TH2D(Form("AllWaveforms_ch%i",datfh.inpch[chn]+1),"All Waveforms",1024,-1,260,1000,-0.51,0.05);
+       NormWaveform[chn] = new TH2D(Form("NormWaveform_ch%i",datfh.inpch[chn]+1),"Normalized Avg Waveform",1024,-1, 260 ,1000,-0.51,0.05);
+       AvgWaveform[chn] = new TH2D(Form("AvgWaveform_ch%i",datfh.inpch[chn]+1),"Average Waveform",1024,-1,260,1000,-0.51,0.05);
        FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",500,-1,10);
        TailArea[chn] = new TH1F(Form("TailArea_ch%i",datfh.inpch[chn]+1),"Tail Area",500,-1,10);
        TAoverWA[chn] = new TH1F(Form("TAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area",500,-1,1);
@@ -189,18 +190,20 @@ void decode(char *filename){
        FWHMoverWA[chn] = new TH1F(Form("FWHMoverWA_ch%i",datfh.inpch[chn]+1),"FWHM/Waveform Area",500,-150,500);
        PHoverWA[chn] = new TH1F(Form("PHoverWA_ch%i",datfh.inpch[chn]+1),"Pulse Height/Waveform Area",500,-0.1,1);
        PHvWA[chn] = new TH2F(Form("PHvWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height",50,-2,10,50,0,0.55);
-       MaxHeight[chn] = new TH1F(Form("MaxHeight_ch%i",datfh.inpch[chn]+1),"Pulse Height",100,0,0.55);
+       MaxHeight[chn] = new TH1F(Form("MaxHeight_ch%i",datfh.inpch[chn]+1),"Pulse Height",300,0,0.55);
        PHoverWAvsWA[chn] = new TH2F(Form("PHoverWAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Height/Waveform Area",1000,-1,9,1000,0,0.25);
        PHvFWHM[chn] = new TH2F(Form("PHvFWHM_ch%i",datfh.inpch[chn]+1),"Pulse Width vs Pulse Height",1000,0,100,1000,0,0.55);
        PHvDT[chn] = new TH2F(Form("PHvDT_ch%i",datfh.inpch[chn]+1),"Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
        WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
        WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);*/
 
-    WVH[chn] = new TH1F(Form("WVH_ch%i",datfh.inpch[chn]+1),"Waveform Height", 10000,-0.01,0.01);
     g[chn] = new TGraph(1024, dat1.time[datfh.inpch[chn]], dat1.waveform[datfh.inpch[chn]]);
     
   }
 
+  TH1F *WVH = new TH1F("WVH","Waveform Height", 10000,-0.01,0.01);  
+  //TH2D *indWaveform = new TH2D("indWaveform","Waveform",1024,-1,1650,1000,-0.51,0.05);
+  
   //loop over events
 
   printf("\nCommencing binary data decoding...\n");
@@ -225,14 +228,14 @@ void decode(char *filename){
       
       for (i=5; i<900; i++){
 	          
-	WVH[chn]->Fill(dat1.waveform[datfh.inpch[chn]][i]);
+	WVH->Fill(dat1.waveform[datfh.inpch[chn]][i]);
 
       }
 
 
       //Get Baseline
 
-      double BL1 = WVH[chn]->GetXaxis()->GetBinCenter(WVH[chn]->GetMaximumBin());
+      double BL1 = WVH->GetXaxis()->GetBinCenter(WVH->GetMaximumBin());
 
 
       //Find Max value on the Waveform
@@ -240,7 +243,9 @@ void decode(char *filename){
       int maxheightindex = 0;
       double maxheight = BL1;
 
-      for(i=5; i< 900 ; i++){
+      bool brandon = false;
+      
+      for(i=5; i < 900 ; i++){
 
 	if(abs(maxheight) < abs(dat1.waveform[datfh.inpch[chn]][i]-BL1)){
 
@@ -249,13 +254,26 @@ void decode(char *filename){
 
 	}
 
+	if((i < 10 || i > 890) && abs(dat1.waveform[datfh.inpch[chn]][i] - BL1) > 0.2){
+
+	    brandon = true;
+
+	  }
+							    
       }
 
+      
+	bool brandon2;
+	
+	if(dat1.time[datfh.inpch[chn]][maxheightindex] > 300 &&  dat1.time[datfh.inpch[chn]][maxheightindex] < 800){
 
+	  brandon2 = true;
+	  
+	}
+	
       //Skip events with Waveforms that have higher than a certain positive voltage relative to V = BL1
       
       if(quer.query2 == 'y'){
-
 
 	bool skip = true;
 
@@ -271,7 +289,7 @@ void decode(char *filename){
 
 	if (skip == false){
 
-	  WVH[chn]->Reset();
+	  WVH->Reset();
 	  continue;
 
 	}
@@ -379,7 +397,7 @@ void decode(char *filename){
 
       for(i = 5; i < 900; i++) {
 
-	WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*( (dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0 );
+	WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0 );
 
       }
 
@@ -401,42 +419,45 @@ void decode(char *filename){
 
       //************************************ Draw Individaul Waveforms and/or Fill Other Histogram  **************************************
 
-      if(abs(maxheight) < 0.49){
+      if(abs(maxheight) < 0.49 && brandon == false && brandon2 == true){
 
 	// Fill Waveform Histograms
 
 	for(i=0; i < 1024; i++){
 
-	  //cout << "dat1 time is " << dat1.time[datfh.inpch[chn]][i] << endl;
 	  sumtime[chn][i] +=  dat1.time[datfh.inpch[chn]][i];
 	  normform[chn][i] += dat1.waveform[datfh.inpch[chn]][i]*(-1/abs(WaveformArea));
 	  sumform[chn][i] += -1*dat1.waveform[datfh.inpch[chn]][i];
+          //indWaveform->Fill(dat1.time[datfh.inpch[chn]][i],-1*dat1.waveform[datfh.inpch[chn]][i]);	  
 	  g[chn]->SetPoint(i, dat1.time[datfh.inpch[chn]][i], -1*dat1.waveform[datfh.inpch[chn]][i]);
 	  hAllWaveforms[chn]->Fill(dat1.time[datfh.inpch[chn]][i],-1*dat1.waveform[datfh.inpch[chn]][i]);
 	  
 	}
-
+	
+	//AvgWaveform[chn]->Add(indWaveform);
+	//NormWaveform[chn]->Add(indWaveform);
+	//NormWaveform[chn]->Scale(WaveformArea);
+	
 	if(quer.query1 == 'y'){
 
 	  cout << "**********************************" << endl;
 	  cout << endl;
 	  cout << "Waveform number: " << n << endl;
-	  cout << "Pulse Width Max (ns): " << dat1.time[datfh.inpch[chn]][index] << " with index " << index << endl;
-	  cout << "Pulse Width Min (ns): " << dat1.time[datfh.inpch[chn]][index1] << " with index " << index1 << endl;
+	  //cout << "Pulse Width Max (ns): " << dat1.time[datfh.inpch[chn]][index] << " with index " << index << endl;
+	  //cout << "Pulse Width Min (ns): " << dat1.time[datfh.inpch[chn]][index1] << " with index " << index1 << endl;
 	  cout<<"Pulse Width (ns): "<< PulseWidth <<endl;
 	  cout<<"Waveform Area (V*ns): "<< WaveformArea <<endl;
 	  cout<<"Tail Area (V*ns): "<< TArea <<endl;
 	  cout<<"Max Pulse Height (V): " << maxheight << endl;
 	  cout<<"Max Pulse Height Location (ns): " << dat1.time[datfh.inpch[chn]][maxheightindex] << " with index " << maxheightindex << endl;
-	  cout<<"Discharge Time (ns): " << DischargeTime << endl;
-	  cout<<"Min Discharge Time (ns): " << dat1.time[datfh.inpch[chn]][indexDischargeMin] << " with index " << indexDischargeMin << endl;
-	  cout<<"Max Discharge Time (ns): " << dat1.time[datfh.inpch[chn]][indexDischargeMax] << " with index " << indexDischargeMax <<  endl;
-	  cout<<"Baseline Value (V): " << -1*BL1 << " with bin " << WVH[chn]->GetMaximumBin() << endl;
-	  cout<<"Waveform Value at 5 ns (V): " << dat1.waveform[datfh.inpch[chn]][5] - BL1 << endl;
+	  //cout<<"Discharge Time (ns): " << DischargeTime << endl;
+	  //cout<<"Min Discharge Time (ns): " << dat1.time[datfh.inpch[chn]][indexDischargeMin] << " with index " << indexDischargeMin << endl;
+	  //cout<<"Max Discharge Time (ns): " << dat1.time[datfh.inpch[chn]][indexDischargeMax] << " with index " << indexDischargeMax <<  endl;
+	  cout<<"Baseline Value (V): " << -1*BL1 << " with bin " << WVH->GetMaximumBin() << endl;
+	  //cout<<"Waveform Value at 5 ns (V): " << dat1.waveform[datfh.inpch[chn]][5] - BL1 << endl;
 	  cout << endl;
 
 	  c1->cd();
-	  g[chn]->Draw("acp");
 	  g[chn]->GetXaxis()->SetTitle("Time (ns)");
 	  g[chn]->GetXaxis()->CenterTitle();
 	  g[chn]->GetYaxis()->SetTitle("Voltage (V)");
@@ -445,21 +466,24 @@ void decode(char *filename){
 	  g[chn]->GetYaxis()->SetTitleOffset(1);
 	  g[chn]->GetXaxis()->SetTitleSize(0.05);
 	  g[chn]->GetYaxis()->SetTitleSize(0.05);
-	  TLine *line = new TLine(0,-1*BL1,200,-1*BL1);
+	  g[chn]->SetTitle(Form("Waveform for Event %i of Channel %i", n, datfh.inpch[chn]+1));
+	  g[chn]->Draw("acp");
+	  TLine *line = new TLine(0,-1*BL1,dat1.time[datfh.inpch[chn]][1023],-1*BL1);
 	  line->SetLineColor(kRed);
 	  line->Draw();
 	  c1->Update();
 
 	  c2->cd();
-	  WVH[chn]->GetXaxis()->SetTitle("Voltage (V)");
-	  WVH[chn]->GetYaxis()->SetTitle("Counts");
-	  WVH[chn]->GetXaxis()->CenterTitle();
-	  WVH[chn]->GetYaxis()->CenterTitle();
-	  WVH[chn]->GetXaxis()->SetTitleOffset(1);
-	  WVH[chn]->GetYaxis()->SetTitleOffset(1);
-	  WVH[chn]->GetXaxis()->SetTitleSize(0.05);
-	  WVH[chn]->GetYaxis()->SetTitleSize(0.05);
-	  WVH[chn]->Draw();
+	  WVH->GetXaxis()->SetTitle("Voltage (V)");
+	  WVH->GetYaxis()->SetTitle("Counts");
+	  WVH->GetXaxis()->CenterTitle();
+	  WVH->GetYaxis()->CenterTitle();
+	  WVH->GetXaxis()->SetTitleOffset(1);
+	  WVH->GetYaxis()->SetTitleOffset(1);
+	  WVH->GetXaxis()->SetTitleSize(0.05);
+	  WVH->GetYaxis()->SetTitleSize(0.05);
+	  WVH->SetTitle(Form("Voltage Values for Event %i of Channel %i", n,  datfh.inpch[chn]+1));			   
+	  WVH->Draw();
 	  c2->Update();
 
 	  gPad->WaitPrimitive();
@@ -490,14 +514,21 @@ void decode(char *filename){
 	WAvsPSD1[chn]->Fill(WaveformArea,PSDv1);
 
       }
-
-      WVH[chn]->Reset();
-   
-    }
       
-	
+      //indWaveform->Reset();
+      WVH->Reset();
+      
+    }
+      	
   }  
 
+  /*for(chn = 0; chn < datfh.inpch.size(); chn++){
+
+   AvgWaveform[chn]->Scale(n);
+   NormWaveform[chn]->Scale(n);
+  
+   }*/
+  
   if(n == quer.ev  || dat1.ext < 1){
 
     double factor = (double)1/(double)(n+1);
@@ -514,7 +545,7 @@ void decode(char *filename){
 	  
     }
 	
-  }
+    }
 
   printf("\n%d events processed in all channels \n", n);
   
