@@ -242,8 +242,6 @@ void decode(char *filename){
 
       int maxheightindex = 0;
       double maxheight = BL1;
-
-      bool brandon = false;
       
       for(i=5; i < 900 ; i++){
 
@@ -254,23 +252,10 @@ void decode(char *filename){
 
 	}
 
-	if((i < 10 || i > 890) && abs(dat1.waveform[datfh.inpch[chn]][i] - BL1) > 0.2){
 
-	    brandon = true;
-
-	  }
-							    
       }
 
       
-	bool brandon2;
-	
-	if(dat1.time[datfh.inpch[chn]][maxheightindex] > 300 &&  dat1.time[datfh.inpch[chn]][maxheightindex] < 800){
-
-	  brandon2 = true;
-	  
-	}
-	
       //Skip events with Waveforms that have higher than a certain positive voltage relative to V = BL1
       
       if(quer.query2 == 'y'){
@@ -394,26 +379,12 @@ void decode(char *filename){
       double TArea = 0.0;
 
       //Waveform Integral
-      if(datfh.inpch[chn]+1 == 3){ 
 
 	for(i = 5; i < 900; i++) {
 
 	  WaveformArea += (abs(dat1.waveform[datfh.inpch[chn]][i]-BL1))*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0);
 
 	}
-
-      }
-
-      else{
-
-	for(i = 5; i < 900; i++){
-
-	  WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0);
-
-	}
-
-      }
-
 
       //Tail integral
 
@@ -433,7 +404,7 @@ void decode(char *filename){
 
       //************************************ Draw Individaul Waveforms and/or Fill Other Histogram  **************************************
 
-      if(abs(maxheight) < 0.49 && brandon == false && brandon2 == true){
+      if(abs(maxheight) < 0.49){ //this cut is necessary because the DRS4 clips pulses below -0.5 volts!
 
 	// Fill Waveform Histograms
 
