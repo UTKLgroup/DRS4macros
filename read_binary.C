@@ -182,7 +182,6 @@ void decode(char *filename){
   }
 
   TH1F *WVH = new TH1F("WVH","Waveform Height", 10000,-0.01,0.01);  
-  //TH2D *indWaveform = new TH2D("indWaveform","Waveform",1024,-1,1650,1000,-0.51,0.05);
   
   //loop over events
 
@@ -393,15 +392,10 @@ void decode(char *filename){
 	  sumtime[chn][i] +=  dat1.time[datfh.inpch[chn]][i];
 	  normform[chn][i] += dat1.waveform[datfh.inpch[chn]][i]*(-1/abs(WaveformArea));
 	  sumform[chn][i] += -1*dat1.waveform[datfh.inpch[chn]][i];
-          //indWaveform->Fill(dat1.time[datfh.inpch[chn]][i],-1*dat1.waveform[datfh.inpch[chn]][i]);	  
 	  g[chn]->SetPoint(i, dat1.time[datfh.inpch[chn]][i], -1*dat1.waveform[datfh.inpch[chn]][i]);
 	  hAllWaveforms[chn]->Fill(dat1.time[datfh.inpch[chn]][i],-1*dat1.waveform[datfh.inpch[chn]][i]);
 	  
 	}
-	
-	//AvgWaveform[chn]->Add(indWaveform);
-	//NormWaveform[chn]->Add(indWaveform);
-	//NormWaveform[chn]->Scale(WaveformArea);
 	
 	if(quer.query1 == 'y'){
 
@@ -487,13 +481,6 @@ void decode(char *filename){
       	
   }  
 
-  /*for(chn = 0; chn < datfh.inpch.size(); chn++){
-
-   AvgWaveform[chn]->Scale(n);
-   NormWaveform[chn]->Scale(n);
-  
-   }*/
-  
   if(n == quer.ev  || dat1.ext < 1){
 
     double factor = (double)1/(double)(n+1);
@@ -501,8 +488,7 @@ void decode(char *filename){
     for(i=0; i < 1024; i++){
 
       for(chn = 0; chn < ((datfh.inpch).size()); chn++){	      
-	//if(chn == 1){
-	//cout << "sumtime is " << sumtime[chn][i]*factor << " and sumform is " << sumform[chn][i]*factor << " and numform is " << normform[chn][i]*factor << endl; //}
+
 	AvgWaveform[chn]->Fill(sumtime[chn][i]*factor,sumform[chn][i]*factor);
 	NormWaveform[chn]->Fill(sumtime[chn][i]*factor,normform[chn][i]*factor);
 
@@ -510,7 +496,7 @@ void decode(char *filename){
 	  
     }
 	
-    }
+  }
 
   printf("\n%d events processed in all channels \n", n);
   
