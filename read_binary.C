@@ -176,26 +176,6 @@ void decode(char *filename){
     PHvDT[chn] = new TH2F(Form("PHvDT_ch%i",datfh.inpch[chn]+1),"Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
     WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",250,0,1000);
     WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,0,50,1000,0,0.03);
-    
-     //for liquid scintillator 
-    /*hAllWaveforms[chn] = new TH2D(Form("AllWaveforms_ch%i",datfh.inpch[chn]+1),"All Waveforms",1024,-1,260,1000,-0.51,0.05);
-       NormWaveform[chn] = new TH2D(Form("NormWaveform_ch%i",datfh.inpch[chn]+1),"Normalized Avg Waveform",1024,-1, 260 ,1000,-0.51,0.05);
-       AvgWaveform[chn] = new TH2D(Form("AvgWaveform_ch%i",datfh.inpch[chn]+1),"Average Waveform",1024,-1,260,1000,-0.51,0.05);
-       FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",500,-1,10);
-       TailArea[chn] = new TH1F(Form("TailArea_ch%i",datfh.inpch[chn]+1),"Tail Area",500,-1,10);
-       TAoverWA[chn] = new TH1F(Form("TAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area",500,-1,1);
-       TAvsWA[chn] = new TH2F(Form("TAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Tail Area",1000,-1,8,1000,-1,3);
-       PHvsTAoverWA[chn] = new TH2F(Form("PHvsTAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area vs Pulse Height",1000,-3,3,1000,0,0.55);
-       FWHMvsWA[chn] = new TH2F(Form("FWHMvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs FWHM",1000,-1,8,1000,-5,25);
-       FWHMoverWA[chn] = new TH1F(Form("FWHMoverWA_ch%i",datfh.inpch[chn]+1),"FWHM/Waveform Area",500,-150,500);
-       PHoverWA[chn] = new TH1F(Form("PHoverWA_ch%i",datfh.inpch[chn]+1),"Pulse Height/Waveform Area",500,-0.1,1);
-       PHvWA[chn] = new TH2F(Form("PHvWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height",50,-2,10,50,0,0.55);
-       MaxHeight[chn] = new TH1F(Form("MaxHeight_ch%i",datfh.inpch[chn]+1),"Pulse Height",300,0,0.55);
-       PHoverWAvsWA[chn] = new TH2F(Form("PHoverWAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Height/Waveform Area",1000,-1,9,1000,0,0.25);
-       PHvFWHM[chn] = new TH2F(Form("PHvFWHM_ch%i",datfh.inpch[chn]+1),"Pulse Width vs Pulse Height",1000,0,100,1000,0,0.55);
-       PHvDT[chn] = new TH2F(Form("PHvDT_ch%i",datfh.inpch[chn]+1),"Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
-       WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
-       WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);*/
 
     g[chn] = new TGraph(1024, dat1.time[datfh.inpch[chn]], dat1.waveform[datfh.inpch[chn]]);
     
