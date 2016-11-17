@@ -394,12 +394,26 @@ void decode(char *filename){
       double TArea = 0.0;
 
       //Waveform Integral
+      if(datfh.inpch[chn]+1 == 3){ 
 
-      for(i = 5; i < 900; i++) {
+	for(i = 5; i < 900; i++) {
 
-	WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0 );
+	  WaveformArea += (abs(dat1.waveform[datfh.inpch[chn]][i]-BL1))*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0);
+
+	}
 
       }
+
+      else{
+
+	for(i = 5; i < 900; i++){
+
+	  WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0);
+
+	}
+
+      }
+
 
       //Tail integral
 
