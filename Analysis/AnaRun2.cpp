@@ -5,9 +5,9 @@ AnaRun2::AnaRun2(TTree * tree) : fChain(0) {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
   if (tree == 0) {
-    TFile * f = (TFile *) gROOT->GetListOfFiles()->FindObject("./07-14-16-drs4run2.root");
+    TFile * f = (TFile *) gROOT->GetListOfFiles()->FindObject("./example.root");
     if (!f || !f->IsOpen()) {
-      f = new TFile("./07-14-16-drs4run2.root");
+      f = new TFile("./example.root");
     }
     f->GetObject("DataTree", tree);
 
@@ -295,6 +295,7 @@ double AnaRun2::WavetailArea(std::vector<double> aVector, std::vector<double> bV
   }
 
   return wavetailArea;
+
 }
 
 double AnaRun2::WaveAmplitude(std::vector<double> aVector, std::vector<double> bVector, int ia) {
@@ -359,7 +360,7 @@ void AnaRun2::PSD(int nentries) {
 
   std::cout << nentries << " events analyzed." << std::endl;
 
-  TFile * OutFile = new TFile("./07-14-16-drs4run2.Analyzed.root", "RECREATE");
+  TFile * OutFile = new TFile("./example_Analyzed.root", "RECREATE");
   hAreaRatio->Write();
   hAmplitudeRatio->Write();
   hPSD->Write();
