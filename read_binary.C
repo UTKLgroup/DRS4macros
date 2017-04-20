@@ -137,24 +137,19 @@ void decode(char *filename){
   TH2D** hAllWaveforms = new TH2D*[(datfh.inpch).size()];
   TH2D** NormWaveform = new TH2D*[(datfh.inpch).size()];
   TH2D** AvgWaveform = new TH2D*[(datfh.inpch).size()];
-
   TH1D** AvgWaveform1D = new TH1D*[(datfh.inpch).size()];  
+
   TH1F** FormArea = new TH1F*[(datfh.inpch).size()];
   TH1F** TailArea = new TH1F*[(datfh.inpch).size()];
   TH1F** TAoverWA = new TH1F*[(datfh.inpch).size()];   
-  TH1F** FWHMoverWA = new TH1F*[(datfh.inpch).size()];
   TH1F** PHoverWA = new TH1F*[(datfh.inpch).size()];
   TH1F** MaxHeight = new TH1F*[(datfh.inpch).size()];
-  TH1F** WAoverPSD1 = new TH1F*[(datfh.inpch).size()];
-  
+  TH1F** CalibratedMH = new TH1F*[(datfh.inpch).size()];
   TH2F** TAvsWA = new TH2F*[(datfh.inpch).size()];
-  TH2F** PHvsTAoverWA = new TH2F*[(datfh.inpch).size()];
-  TH2F** FWHMvsWA = new TH2F*[(datfh.inpch).size()];
   TH2F** PHvWA = new TH2F*[(datfh.inpch).size()];
-  TH2F** PHoverWAvsWA = new TH2F*[(datfh.inpch).size()];
-  TH2F** PHvFWHM = new TH2F*[(datfh.inpch).size()];
-  TH2F** PHvDT = new TH2F*[(datfh.inpch).size()];
-  TH2F** WAvsPSD1 = new TH2F*[(datfh.inpch).size()];
+  
+  TH2D** PHoWAvsTAoWA = new TH2D*[(datfh.inpch).size()];
+    
   TGraph** g = new TGraph*[(datfh.inpch).size()];
 
   //loop to pre-define relevant histograms for all input channels
@@ -168,22 +163,16 @@ void decode(char *filename){
       NormWaveform[chn] = new TH2D(Form("NormWaveform_ch%i",datfh.inpch[chn]+1),"Normalized Avg Waveform",1024,-1, 210 ,1000,-0.51,0.05);
       AvgWaveform[chn] = new TH2D(Form("AvgWaveform_ch%i",datfh.inpch[chn]+1),"Average Waveform",1024,-1,210,1000,-0.51,0.05);
       AvgWaveform1D[chn] = new TH1D(Form("AvgWaveform1D_ch%i",datfh.inpch[chn]+1),"1D Average Waveform",1024,0,1024);
-      FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",250,0,10);
-      TailArea[chn] = new TH1F(Form("TailArea_ch%i",datfh.inpch[chn]+1),"Tail Area",250,-1,10);
-      TAoverWA[chn] = new TH1F(Form("TAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area",250,0,1);
-      TAvsWA[chn] = new TH2F(Form("TAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Tail Area",1000,-1,10,1000,-1,10);
-      PHvsTAoverWA[chn] = new TH2F(Form("PHvsTAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area vs Pulse Height",1000,-3,3,1000,0,0.55);
-      FWHMvsWA[chn] = new TH2F(Form("FWHMvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs FWHM",1000,-1,8,1000,-5,25);
-      FWHMoverWA[chn] = new TH1F(Form("FWHMoverWA_ch%i",datfh.inpch[chn]+1),"FWHM/Waveform Area",500,-150,500);
+      FormArea[chn] = new TH1F(Form("WaveformArea_ch%i",datfh.inpch[chn]+1),"Waveform Area",500,0,10);
+      TailArea[chn] = new TH1F(Form("TailArea_ch%i",datfh.inpch[chn]+1),"Tail Area",500,-1,10);
+      TAoverWA[chn] = new TH1F(Form("TAoverWA_ch%i",datfh.inpch[chn]+1),"Tail Area/Waveform Area",500,-1,1);
+      TAvsWA[chn] = new TH2F(Form("TAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Tail Area",1000,-1,15,1000,-1,10);
       PHoverWA[chn] = new TH1F(Form("PHoverWA_ch%i",datfh.inpch[chn]+1),"Pulse Height/Waveform Area",500,0,0.6);
       PHvWA[chn] = new TH2F(Form("PHvWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height",50,-2,10,50,0,0.55);
-      MaxHeight[chn] = new TH1F(Form("MaxHeight_ch%i",datfh.inpch[chn]+1),"Pulse Height",300,0,0.55);
-      PHoverWAvsWA[chn] = new TH2F(Form("PHoverWAvsWA_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Height/Waveform Area",1000,-1,9,1000,0,0.25);
-      PHvFWHM[chn] = new TH2F(Form("PHvFWHM_ch%i",datfh.inpch[chn]+1),"Pulse Width vs Pulse Height",1000,0,100,1000,0,0.55);
-      PHvDT[chn] = new TH2F(Form("PHvDT_ch%i",datfh.inpch[chn]+1),"Discharge Time vs Pulse Height",1000,0,50,1000,0,0.55);
-      WAoverPSD1[chn] = new TH1F(Form("WAoverPSD1_ch%i",datfh.inpch[chn]+1), "Waveform Area/(Pulse Height/Discharge Time)",600,-60,1000);
-      WAvsPSD1[chn] = new TH2F(Form("WAvsPSD1_ch%i",datfh.inpch[chn]+1),"Waveform Area vs Pulse Height/Discharge Time", 1000,-1,8,1000,0,0.03);
-
+      MaxHeight[chn] = new TH1F(Form("MaxHeight_ch%i",datfh.inpch[chn]+1),"Pulse Height",150,0,0.5);
+      CalibratedMH[chn] = new TH1F(Form("CalibratedMH_ch%i",datfh.inpch[chn]+1),"CalibratedMH Value on Waveform",300,0,10);
+      PHoWAvsTAoWA[chn] = new TH2D(Form("PHoWAvsTAoWA_ch%i",datfh.inpch[chn]+1),"Pulse Height/Waveform Area vs Tail Area/Waveform Area", 1000, -0.5, 0.6, 500, -1, 1);      
+	
     g[chn] = new TGraph(1024, dat1.time[datfh.inpch[chn]], dat1.waveform[datfh.inpch[chn]]);
     
   }
@@ -220,7 +209,6 @@ void decode(char *filename){
 
       //Get Baseline
 
-      //double BL1 = WVH->GetMean();
       double BL1 = WVH->GetXaxis()->GetBinCenter(WVH->GetMaximumBin());
       
 	//Find Max value on the Waveform
@@ -265,6 +253,7 @@ void decode(char *filename){
 	}
 
       
+
 	//***************************************** Section for Finding Pulse Widths and Rise/Fall Times *********************************************
 
 	//Find the FWHM Value on the Left Side of Main Pulse
@@ -275,9 +264,9 @@ void decode(char *filename){
 	
 	for(i = maxheightindex; i > 5; i--){
 
-	  if(dat1.waveform[datfh.inpch[chn]][i] >= FWHM && dat1.waveform[datfh.inpch[chn]][i-1] <= FWHM && !foundFWHMleft){
+	  if(dat1.waveform[datfh.inpch[chn]][i]-BL1  >= FWHM && (dat1.waveform[datfh.inpch[chn]][i-1]-BL1) <= FWHM && !foundFWHMleft){
 
-	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - FWHM) >= abs(dat1.waveform[datfh.inpch[chn]][i-1] - FWHM)){ 
+	    if(abs(dat1.waveform[datfh.inpch[chn]][i]-BL1 - FWHM) >= abs(dat1.waveform[datfh.inpch[chn]][i-1] - BL1 - FWHM)){ 
 		   
 	    FWHMleftindex = i;
 	    foundFWHMleft = true;
@@ -301,9 +290,9 @@ void decode(char *filename){
 	
 	for(i = maxheightindex; i < 900; i++){
 
-	  if(dat1.waveform[datfh.inpch[chn]][i] >= FWHM && dat1.waveform[datfh.inpch[chn]][i+1] <= FWHM && !foundFWHMright){
+	  if(dat1.waveform[datfh.inpch[chn]][i] - BL1 >= FWHM && (dat1.waveform[datfh.inpch[chn]][i+1] - BL1) <= FWHM && !foundFWHMright){
 
-	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - FWHM) >= abs(dat1.waveform[datfh.inpch[chn]][i+1] - FWHM)){ 
+	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - BL1 - FWHM) >= abs(dat1.waveform[datfh.inpch[chn]][i+1] - BL1 - FWHM)){ 
 		   
 	      FWHMleftindex = i;
 	      foundFWHMleft = true;
@@ -323,15 +312,15 @@ void decode(char *filename){
 
 	//Constant Fraction Discrimination method
 	
-	double DischTimeleft = maxheight/10;
+	double DischTimeleft = maxheight/5;
 	bool foundDischTimeleft = false;
 	int DischTimeleftindex = 0;
 
 	for(i = maxheightindex; i > 5; i--){
 
-	  if(dat1.waveform[datfh.inpch[chn]][i] >= DischTimeleft && dat1.waveform[datfh.inpch[chn]][i-1] <= DischTimeleft && !foundDischTimeleft){
+	  if(dat1.waveform[datfh.inpch[chn]][i] - BL1 >= DischTimeleft && (dat1.waveform[datfh.inpch[chn]][i-1] - BL1) <= DischTimeleft && !foundDischTimeleft){
 
-	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - DischTimeleft) >= abs(dat1.waveform[datfh.inpch[chn]][i-1] - DischTimeleft)){
+	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - BL1  - DischTimeleft) >= abs(dat1.waveform[datfh.inpch[chn]][i-1] - BL1 - DischTimeleft)){
 
 	      DischTimeleftindex = i;
 	      foundDischTimeleft = true;
@@ -359,9 +348,9 @@ void decode(char *filename){
 
 	for(i = maxheightindex; i < 900; i++){
 
-	  if(dat1.waveform[datfh.inpch[chn]][i] >= DischTimeright && dat1.waveform[datfh.inpch[chn]][i+1] <= DischTimeright && !foundDischTimeright){
+	  if(dat1.waveform[datfh.inpch[chn]][i] - BL1 >= DischTimeright && dat1.waveform[datfh.inpch[chn]][i+1] - BL1 <= DischTimeright && !foundDischTimeright){
 
-	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - DischTimeright) >= abs(dat1.waveform[datfh.inpch[chn]][i+1] - DischTimeright)){
+	    if(abs(dat1.waveform[datfh.inpch[chn]][i] - DischTimeright - BL1) >= abs(dat1.waveform[datfh.inpch[chn]][i+1] - BL1 - DischTimeright)){
 	    
 	      DischTimerightindex = i;
 	      foundDischTimeright = true;
@@ -389,9 +378,10 @@ void decode(char *filename){
 
 	//Waveform Integral
 
-	for(i = DischTimeleftindex; i < 1000; i++){
+	for(i = 5; i < 1000; i++){
  
-	  WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*(dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i]);
+	  WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2.0 + (dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0);
+	  //WaveformArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*(dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i]);
 
 	}
 
@@ -399,21 +389,21 @@ void decode(char *filename){
 
 	for(i = DischTimerightindex; i < 1000; i++){
 
-  	  TArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*(dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i]);
+	  TArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*((dat1.time[datfh.inpch[chn]][i]-dat1.time[datfh.inpch[chn]][i-1])/2+(dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i])/2.0);
+  	  //TArea += (dat1.waveform[datfh.inpch[chn]][i]-BL1)*(dat1.time[datfh.inpch[chn]][i+1]-dat1.time[datfh.inpch[chn]][i]);
 
 	}
 
-	double DischargeTime = dat1.time[datfh.inpch[chn]][DischTimerightindex] - dat1.time[datfh.inpch[chn]][DischTimeleftindex];
+
 	double AreaRatio = TArea/WaveformArea;
 	double PulseWidth = dat1.time[datfh.inpch[chn]][FWHMrightindex]-dat1.time[datfh.inpch[chn]][FWHMleftindex];
-	double FWHMoverWA1 = PulseWidth/WaveformArea;
 	double HoverWA = maxheight/WaveformArea;
-	double PSDv1 = maxheight/DischargeTime;
-	double PSDv2 = WaveformArea/PSDv1;
+	
 	
 	//************************************ Draw Individaul Waveforms and/or Fill Other Histogram  **************************************
 
 	if(maxheight < 0.49){
+
 
 	  for(i=0; i < 1024; i++){
 	    
@@ -424,7 +414,7 @@ void decode(char *filename){
 	    hAllWaveforms[chn]->Fill(dat1.time[datfh.inpch[chn]][i],-1*dat1.waveform[datfh.inpch[chn]][i]);
 	  	  
 	  }
-	
+
 	  if(quer.query1 == 'y' && chn==1){
 	    
 	    cout << "**********************************" << endl;
@@ -438,14 +428,7 @@ void decode(char *filename){
 	    cout << "Tail Area (V*ns): "<< TArea <<endl;
 	    cout << "Current Peak Location (ns): " << dat1.time[datfh.inpch[chn]][maxheightindex]  << " with index " << maxheightindex << endl;
 	    cout << "Wave Amplitude (ns): " << dat1.time[datfh.inpch[chn]][maxheightindex] << " with index " << maxheightindex <<  endl;
-	    cout << "Discharge Time Right (ns) " << dat1.time[datfh.inpch[chn]][DischTimerightindex] << " with index " << DischTimerightindex << endl;
-	    cout << "Discharge Time Left (ns) " << dat1.time[datfh.inpch[chn]][DischTimeleftindex] << " with index " << DischTimeleftindex << endl;
-	    cout << "Rise-Fall Time (ns): " << DischargeTime << endl;
-	    cout << "maxheightindex + 80: " << dat1.time[datfh.inpch[chn]][maxheightindex + 80] << " with index " << maxheightindex + 80 << endl;
-	    cout << "maxheightindex - 10: " << dat1.time[datfh.inpch[chn]][maxheightindex - 10] << " with index " << maxheightindex - 10 << endl;
-	    cout << "maxheightindex + 80 - DischTimerightindex: " << dat1.time[datfh.inpch[chn]][maxheightindex + 80] - dat1.time[datfh.inpch[chn]][DischTimerightindex] << endl;
-	    cout << "maxheightindex - 10 - FWHMleftindex: " << dat1.time[datfh.inpch[chn]][maxheightindex - 10] - dat1.time[datfh.inpch[chn]][FWHMleftindex] << endl;
-	    
+	  	    
 	    cout << endl;
 
 	    c1->cd();
@@ -462,7 +445,7 @@ void decode(char *filename){
 	    TLine *line = new TLine(0,-1*BL1,dat1.time[datfh.inpch[chn]][1023],-1*BL1);
 	    line->SetLineColor(kRed);
 	    line->Draw();
-	    
+  	    
 	    c1->Update();
 
 	    c2->cd();
@@ -488,19 +471,13 @@ void decode(char *filename){
 	  FormArea[chn]->Fill(WaveformArea);
 	  TAoverWA[chn]->Fill(AreaRatio);
 	  TailArea[chn]->Fill(TArea);
-	  PHvsTAoverWA[chn]->Fill(AreaRatio,maxheight);
-	  FWHMvsWA[chn]->Fill(WaveformArea,PulseWidth);
 	  TAvsWA[chn]->Fill(WaveformArea,TArea);
-	  FWHMoverWA[chn]->Fill(FWHMoverWA1);	
 	  PHvWA[chn]->Fill(WaveformArea,maxheight);
 	  PHoverWA[chn]->Fill(HoverWA);
 	  MaxHeight[chn]->Fill(maxheight);
-	  PHoverWAvsWA[chn]->Fill(WaveformArea,HoverWA);
-	  PHvFWHM[chn]->Fill(PulseWidth,maxheight);
-	  PHvDT[chn]->Fill(DischargeTime,maxheight);
-	  WAoverPSD1[chn]->Fill(PSDv2);
-	  WAvsPSD1[chn]->Fill(WaveformArea,PSDv1);
-
+	  CalibratedMH[chn]->Fill(maxheight);
+	  PHoWAvsTAoWA[chn]->Fill(HoverWA,AreaRatio); 
+      
 	  counter[chn]++;
 	
 	}
@@ -560,19 +537,10 @@ void decode(char *filename){
       TailArea[chn]->Write();
       TAvsWA[chn]->Write();
       TAoverWA[chn]->Write();
-      PHvsTAoverWA[chn]->Write();
-      FWHMvsWA[chn]->Write();
-      FWHMoverWA[chn]->Write();
-    
       MaxHeight[chn]->Write();
-      PHvWA[chn]->Write();
-      PHvFWHM[chn]->Write();
       PHoverWA[chn]->Write();
-      PHoverWAvsWA[chn]->Write();
-
-      PHvDT[chn]->Write();
-      WAoverPSD1[chn]->Write();
-      WAvsPSD1[chn]->Write();
+      CalibratedMH[chn]->Write();
+      PHoWAvsTAoWA[chn]->Write();
 
     }
 
